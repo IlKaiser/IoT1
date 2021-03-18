@@ -6,6 +6,10 @@ RIOTBASE ?= $(CURDIR)/../../RIOT
 
 DEVELHELP ?= 1
 
+USEMODULE += dht
+
+USEMODULE += hd44780
+
 USEMODULE += xtimer
 USEMODULE += periph_gpio_irq
 
