@@ -7,6 +7,7 @@ RIOTBASE ?= $(CURDIR)/../../RIOT
 DEVELHELP ?= 1
 
 USEMODULE += xtimer
+USEMODULE += periph_gpio_irq
 
 # Modules to include:
 USEMODULE += shell
