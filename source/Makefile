@@ -7,6 +7,9 @@ RIOTBASE ?= $(CURDIR)/../../RIOT
 DEVELHELP ?= 1
 
 USEMODULE += dht
+USEMODULE += fmt
+
+USEMODULE += pir
 
 USEMODULE += hd44780
 
@@ -22,3 +25,10 @@ USEMODULE += ps
 CFLAGS=-DAUTO_INIT_LED0
 
 include $(RIOTBASE)/Makefile.include
+
+
+all-polling: CFLAGS += -DTEST_PIR_POLLING
+
+all-polling: all
+
+all-interrupt: all
