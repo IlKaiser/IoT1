@@ -5,83 +5,42 @@
 #include "thread.h"
 #include "shell.h"
 #include "led.h"
+//#include "pir.h"
 
 #include "periph/gpio.h"
 
-/*
+
 #include "dht.h"
 #include "dht_params.h"
 #include "saul.h"
 #include "hd44780.h"
-*/
+#include "thread.h"
 
-int i = 0;
+//char rcv_thread_stack[THREAD_STACKSIZE_MAIN];
 
-void cb_f(void* args){
-    (void) args;
-    
-    printf("MVNT detected %i\n",++i);
-    
-    //r
-    gpio_write(GPIO_PIN(PORT_B,3),1024);
-    //g
-    gpio_write(GPIO_PIN(PORT_B,5),0);
-    //b
-    gpio_write(GPIO_PIN(PORT_B,4),0);
-    
-    printf("LGHT on \n");
-    
-    
-    xtimer_sleep(5);
-    
-    //r
-    gpio_write(GPIO_PIN(PORT_B,3),0);
-    //g
-    gpio_write(GPIO_PIN(PORT_B,5),0);
-    //b
-    gpio_write(GPIO_PIN(PORT_B,4),0);
-    
-    printf("LGHT off \n");
-    
-    
-    
-}
+dht_t dht_dev;
+int th[2];
+char msg[32];
 
 
-int my_command1(int argc, char **argv) {
-	(void) argc;
-	(void) argv;
+
+
     
-    while(1){
-        printf("Read: %d\n",gpio_read(GPIO_PIN(PORT_A,10)));
-        xtimer_sleep(2);
-    }
-	return 0;
-}
 
-static const shell_command_t shell_commands[] = {
-    //{ "cmd", "our custom command", my_command },
-    { "detect", "our custom command", my_command1 },
-    { NULL, NULL, NULL }
-};
-
-
-/*dht read
-int my_command1(int argc, char **argv) {
-	(void) argc;
-	(void) argv;
-
-	printf("Read some s***\n");
+/*dht read*/
+void dht_temp_read(void) {
+    
     int16_t temp,hum;
-    dht_read(&dev,&temp,&hum );
-	printf("This is it:\nTemp -> %f°C\nHum  -> %f%% \n",temp/10.0f,hum/10.0f);
-	return 0;
-}*/
+    dht_read(&dht_dev,&temp,&hum);
+    
+    th[0] = temp/10;
+    th[1] = hum/10;
+    
+    return;
+}
 
-
-/*lcd 
-int main(void)
-{
+/*lcd*/
+int lcd_write(char msg[]){
     
     hd44780_t dev;
     hd44780_params_t params = {
@@ -90,15 +49,15 @@ int main(void)
         .cols=(16U),
         .rows=(2U),
         
-        .rs=GPIO_PIN(PORT_A,10),
+        .rs=GPIO_PIN(PORT_A,9),
         .rw=GPIO_UNDEF,
-        .enable=GPIO_PIN(PORT_B, 3),
-        .data={GPIO_PIN(PORT_B, 5),GPIO_PIN(PORT_B, 4),GPIO_PIN(PORT_B, 10),
-               GPIO_PIN(PORT_A, 8),GPIO_UNDEF,GPIO_UNDEF,GPIO_UNDEF,GPIO_UNDEF}
+        .enable=GPIO_PIN(PORT_C, 7),
+        .data={GPIO_PIN(PORT_B, 6),GPIO_PIN(PORT_A, 7),GPIO_PIN(PORT_A, 6),
+               GPIO_PIN(PORT_A, 5),GPIO_UNDEF,GPIO_UNDEF,GPIO_UNDEF,GPIO_UNDEF}
     };
     
     // init display 
-    puts("[START]");
+    //puts("[START]");
     if (hd44780_init(&dev, &params) != 0) {
         puts("[FAILED]");
         return 1;
@@ -108,51 +67,73 @@ int main(void)
     hd44780_clear(&dev);
     hd44780_home(&dev);
     // write first line 
-    hd44780_print(&dev, "Hello World ...");
-    xtimer_sleep(1);
-    // set cursor to second line and write 
-    hd44780_set_cursor(&dev, 0, 1);
-    hd44780_print(&dev, "   RIOT is here!");
-    xtimer_sleep(3);
-    // clear screen, reset cursor 
-    hd44780_clear(&dev);
-    hd44780_home(&dev);
-    // write first line 
-    hd44780_print(&dev, "The friendly IoT");
-    // set cursor to second line and write 
-    hd44780_set_cursor(&dev, 0, 1);
-    hd44780_print(&dev, "Operating System");
-
-    puts("[SUCCESS]");
+    hd44780_print(&dev,msg);
 
     return 0;
-}*/
-
-
-int main(void)
+}
+/*
+void *rcv_thread(void *arg)
 {
-    //gpio_init(GPIO_PIN(PORT_A, 10),GPIO_IN);
-    gpio_init(GPIO_PIN(PORT_B, 3),GPIO_OD_PU);
-    gpio_init(GPIO_PIN(PORT_B, 5),GPIO_OD_PU);
-    gpio_init(GPIO_PIN(PORT_B, 4),GPIO_OD_PU);
+    (void) arg;
+    //sprintf(msg,"T %d H %d%%",th[0],th[1]);
+    //printf("msg: %s\n",msg);
+    lcd_write("Ciao");
+    return NULL;
     
-    /*dht
+}
+*/
+/* main interrupt handler */
+void cb_f(void* args){
+    
+    (void) args;
+    
+    
+    printf("MVNT detected \n");
+    
+    printf("LGHT on \n");
+    
+    gpio_write(GPIO_PIN(PORT_B,5),1);
+    
+    dht_temp_read();
+    
+    printf("T %d H %d%%\n",th[0],th[1]);
+    
+    /*thread_create(rcv_thread_stack, sizeof(rcv_thread_stack),
+                  THREAD_PRIORITY_MAIN-1, THREAD_CREATE_STACKTEST,
+                  rcv_thread, NULL, "rcv_thread");*/
+    
+    lcd_write("Ciao");
+
+    xtimer_sleep(5);
+    
+    gpio_write(GPIO_PIN(PORT_B,5),0);
+        
+    printf("LGHT off \n");
+    
+}
+
+int main(void){
+    
+    printf("Start SETUP...\n");
+    
+    // init pir pin
+    gpio_init(GPIO_PIN(PORT_B, 5),GPIO_OUT);
+    
      
-       
+    // init dht  
     dht_params_t params ={0};
     
-    params.pin=GPIO_PIN(PORT_A, 10);
+    params.pin=GPIO_PIN(PORT_B, 3);
     params.type=DHT11;
     params.in_mode=GPIO_IN;
     
+    dht_init(&dht_dev,&params);	
     
-    dht_init(&dev,&params);	
-     */
     
+    //init pir int
     gpio_init_int(GPIO_PIN(PORT_A, 10),GPIO_IN,GPIO_RISING,cb_f,NULL);
-    char line_buf[SHELL_DEFAULT_BUFSIZE];
-    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
     
-
+    printf("SETUP done!\n");
+    
     return 0;
 }
