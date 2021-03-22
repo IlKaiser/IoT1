@@ -33,8 +33,8 @@ void dht_temp_read(void) {
     int16_t temp,hum;
     dht_read(&dht_dev,&temp,&hum);
     
-    th[0] = temp/10;
-    th[1] = hum/10;
+    th[0] = temp;
+    th[1] = hum;
     
     return;
 }
@@ -77,7 +77,7 @@ void* pir_handler(void *arg)
                 puts("something started moving.\n");
                 gpio_write(GPIO_PIN(PORT_B,5),1);
                 dht_temp_read();
-                sprintf(msg,"T %d H %d%%",th[0],th[1]);
+                sprintf(msg,"T:%.1f C H:%.1f%%",th[0]/10.0f,th[1]/10.0f);
                 printf("msg: %s\n",msg);
                 lcd_write(msg);
                 break;

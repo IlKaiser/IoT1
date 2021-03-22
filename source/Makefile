@@ -9,6 +9,8 @@ DEVELHELP ?= 1
 USEMODULE += dht
 USEMODULE += fmt
 
+USEMODULE += printf_float
+
 USEMODULE += pir
 
 USEMODULE += hd44780
