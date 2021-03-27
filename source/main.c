@@ -31,12 +31,14 @@
 #define NUMOFSUBS           (1U)
 #define TOPIC_MAXLEN        (64U)
 
+#define MQTT_TOPIC_TO_AWS   "iot/1/data"
+
 static char mqtt_handler_stack[THREAD_STACKSIZE_DEFAULT];
 static char pir_handler_stack[THREAD_STACKSIZE_MAIN];
 
 
 static emcute_sub_t subscriptions[NUMOFSUBS];
-static char topics[NUMOFSUBS][TOPIC_MAXLEN];
+//static char topics[NUMOFSUBS][TOPIC_MAXLEN];
 
 
 dht_t dht_dev;
@@ -56,9 +58,9 @@ static void *emcute_thread(void *arg){
     
     (void)arg;
     emcute_run(CONFIG_EMCUTE_DEFAULT_PORT, EMCUTE_ID);
-    return NULL;    /* should never be reached */
+    return NULL;    //should never be reached 
 }
-
+/*
 static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
     
     char *in = (char *)data;
@@ -70,7 +72,7 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
     }
     puts("");
 }
-
+*/
 int init_mqtt(void){
     
     /* initialize our subscription buffers */
@@ -104,7 +106,8 @@ int init_mqtt(void){
     printf("Successfully connected to gateway at [%s]:%i\n",
            SERVER_ADDR, (int)gw.port);
 
-    /* setup subscription to topic*/
+    /* 
+     * setup subscription to topic
     unsigned flags = EMCUTE_QOS_0;
     subscriptions[0].cb = on_pub;
     strcpy(topics[0], MQTT_TOPIC);
@@ -116,9 +119,37 @@ int init_mqtt(void){
     }
 
     printf("Now subscribed to %s\n", MQTT_TOPIC);
+    */
 
-    return 1;
+    return 0;
 }
+
+static int mqtt_pub(char *topic,char *data){
+    
+    emcute_topic_t t;
+    unsigned flags = EMCUTE_QOS_0;
+
+    printf("pub with topic: %s and name %s and flags 0x%02x\n",topic,data, (int)flags);
+
+    /* step 1: get topic id */
+    t.name = topic;
+    if (emcute_reg(&t) != EMCUTE_OK) {
+        puts("error: unable to obtain topic ID");
+        return 1;
+    }
+
+    /* step 2: publish data */
+    if (emcute_pub(&t,data, strlen(data), flags) != EMCUTE_OK) {
+        printf("error: unable to publish data to topic '%s [%i]'\n",
+                t.name, (int)t.id);
+        return 1;
+    }
+    printf("Published %i bytes to topic '%s [%i]'\n",
+            (int)strlen(data), t.name, t.id);
+
+    return 0;
+}
+
 
 /* init devices */
 
@@ -238,6 +269,9 @@ void* pir_handler(void *arg){
                 printf("msg: %s\n",msg);
                 
                 lcd_write(msg);
+                
+                mqtt_pub(MQTT_TOPIC_TO_AWS,msg);
+                
                 break;
             }
             case PIR_STATUS_INACTIVE:{
@@ -260,20 +294,32 @@ int main(void){
     
     printf("[Start SETUP]\n");
     
+    int ret;
+    
     // init relay pin
-    gpio_init(GPIO_PIN(PORT_B, 5),GPIO_OUT);
+    ret=gpio_init(GPIO_PIN(PORT_B, 5),GPIO_OUT);
     
     // init pir sensor
-    init_pir();
+    ret|=init_pir();
     
     // init dht sensor  
-    init_dht();
+    ret|=init_dht();
     
+   
     // init lcd display 
-    init_lcd();
+    ret|=init_lcd();
     
     //init mqtt client
-    init_mqtt();
+    printf("[Start MQTT connection]\n");
+    ret|=init_mqtt();
+    printf("[MQTT connected]\n");
+    
+    // check everithing is okay thus far
+    if(ret){
+        printf("[INIT devices failed]\n");
+        return -1;
+    }
+     printf("[INIT devices succeded]\n");
     
     //init pir interrupt routine
     thread_create(
@@ -281,7 +327,7 @@ int main(void){
            THREAD_CREATE_WOUT_YIELD | THREAD_CREATE_STACKTEST,
            pir_handler, NULL, "pir_handler");
     
-    printf("[SETUP done]!\n");
+    printf("[SETUP done!]\n");
     
     return 0;
 }
