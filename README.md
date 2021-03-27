@@ -3,12 +3,22 @@
 
 ## Smart Home
 
+
+
+
 ```
 
 WIP
 
 ```
-### RGB led
+
+## Circuit Setup 
+![Png](./source/circuit_setup/circuit.png)
+
+### DHT temperature & humidity Sensor
 
 ###  HC-SR501 PIR Sensor
 
+### Relay + Lightbulb
+
+### LCD display
