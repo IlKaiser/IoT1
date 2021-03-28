@@ -2,14 +2,12 @@
 #include <string.h>
 
 #include "board.h"
-#include "xtimer.h"
-#include "thread.h"
-#include "shell.h"
 #include "led.h"
+#include "mutex.h"
 #include "pir.h"
-
-#include "periph/gpio.h"
-
+#include "shell.h"
+#include "thread.h"
+#include "xtimer.h"
 
 #include "dht.h"
 #include "dht_params.h"
@@ -19,9 +17,9 @@
 #include "timex.h"
 #include "tm.h"
 
-
-
 #include "net/emcute.h"
+#include "periph/gpio.h"
+
 
 #ifndef EMCUTE_ID
 #define EMCUTE_ID           ("gertrud")
@@ -33,122 +31,38 @@
 
 #define MQTT_TOPIC_TO_AWS   "iot/1/data"
 
+
+/*global variables*/
+
+//thread stuff
 static char mqtt_handler_stack[THREAD_STACKSIZE_DEFAULT];
 static char pir_handler_stack[THREAD_STACKSIZE_MAIN];
 
+//mutex
+mutex_t mutex;
 
+//mqtt
 static emcute_sub_t subscriptions[NUMOFSUBS];
 //static char topics[NUMOFSUBS][TOPIC_MAXLEN];
 
-
+//device resources
 dht_t dht_dev;
 pir_t pir_dev;
 hd44780_t display_dev;
+
+/*sycnchronized resources*/
+
+//message arrays
 int th[2];
 char msg[32];
+char json[32];
+
+float pir_last_awake_s = 0;
 
 
 
 
 
-/* mqtt routine*/
-
-
-static void *emcute_thread(void *arg){
-    
-    (void)arg;
-    emcute_run(CONFIG_EMCUTE_DEFAULT_PORT, EMCUTE_ID);
-    return NULL;    //should never be reached 
-}
-/*
-static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
-    
-    char *in = (char *)data;
-
-    printf("### got publication for topic '%s' [%i] ###\n",
-           topic->name, (int)topic->id);
-    for (size_t i = 0; i < len; i++) {
-        printf("%c", in[i]);
-    }
-    puts("");
-}
-*/
-int init_mqtt(void){
-    
-    /* initialize our subscription buffers */
-    memset(subscriptions, 0, (NUMOFSUBS * sizeof(emcute_sub_t)));
-
-    /* start the emcute thread */
-    thread_create(mqtt_handler_stack, sizeof(mqtt_handler_stack), EMCUTE_PRIO, 0,
-                  emcute_thread, NULL, "emcute");
-
-    // connect to MQTT-SN broker
-    printf("Connecting to MQTT-SN broker %s port %d.\n",
-           SERVER_ADDR, SERVER_PORT);
-
-    sock_udp_ep_t gw = { .family = AF_INET6, .port = SERVER_PORT };
-    char *topic = MQTT_TOPIC;
-    char *message = "connected";
-    size_t len = strlen(message);
-
-    /* parse address */
-    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, SERVER_ADDR) == NULL) {
-        printf("error parsing IPv6 address\n");
-        return 1;
-    }
-
-    if (emcute_con(&gw, true, topic, message, len, 0) != EMCUTE_OK) {
-        printf("error: unable to connect to [%s]:%i\n", SERVER_ADDR,
-               (int)gw.port);
-        return 1;
-    }
-
-    printf("Successfully connected to gateway at [%s]:%i\n",
-           SERVER_ADDR, (int)gw.port);
-
-    /* 
-     * setup subscription to topic
-    unsigned flags = EMCUTE_QOS_0;
-    subscriptions[0].cb = on_pub;
-    strcpy(topics[0], MQTT_TOPIC);
-    subscriptions[0].topic.name = MQTT_TOPIC;
-
-    if (emcute_sub(&subscriptions[0], flags) != EMCUTE_OK) {
-        printf("error: unable to subscribe to %s\n", MQTT_TOPIC);
-        return 1;
-    }
-
-    printf("Now subscribed to %s\n", MQTT_TOPIC);
-    */
-
-    return 0;
-}
-
-static int mqtt_pub(char *topic,char *data){
-    
-    emcute_topic_t t;
-    unsigned flags = EMCUTE_QOS_0;
-
-    printf("pub with topic: %s and name %s and flags 0x%02x\n",topic,data, (int)flags);
-
-    /* step 1: get topic id */
-    t.name = topic;
-    if (emcute_reg(&t) != EMCUTE_OK) {
-        puts("error: unable to obtain topic ID");
-        return 1;
-    }
-
-    /* step 2: publish data */
-    if (emcute_pub(&t,data, strlen(data), flags) != EMCUTE_OK) {
-        printf("error: unable to publish data to topic '%s [%i]'\n",
-                t.name, (int)t.id);
-        return 1;
-    }
-    printf("Published %i bytes to topic '%s [%i]'\n",
-            (int)strlen(data), t.name, t.id);
-
-    return 0;
-}
 
 
 /* init devices */
@@ -185,7 +99,7 @@ int lcd_write(char msg[]){
     // write first line 
     hd44780_print(&display_dev,msg);
     
-    /* set cursor to second line and write */
+    //set cursor to second line and write 
     hd44780_set_cursor(&display_dev, 0, 1);
     char time[65];
     timex_t timex;
@@ -245,8 +159,110 @@ int init_pir(void){
     }
     return 0;
 }
-/* main interrupt handler */
 
+
+/* mqtt routine*/
+static void *emcute_thread(void *arg){
+    
+    (void)arg;
+    emcute_run(CONFIG_EMCUTE_DEFAULT_PORT, EMCUTE_ID);
+    return NULL;    //should never be reached 
+}
+/*
+static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
+    
+    char *in = (char *)data;
+
+    printf("### got publication for topic '%s' [%i] ###\n",
+           topic->name, (int)topic->id);
+    for (size_t i = 0; i < len; i++) {
+        printf("%c", in[i]);
+    }
+    puts("");
+}
+*/
+
+static int mqtt_pub(char *topic,char *data){
+    
+    emcute_topic_t t;
+    unsigned flags = EMCUTE_QOS_0;
+
+    printf("pub with topic: %s and name %s and flags 0x%02x\n",topic,data, (int)flags);
+
+    /* step 1: get topic id */
+    t.name = topic;
+    if (emcute_reg(&t) != EMCUTE_OK) {
+        puts("error: unable to obtain topic ID");
+        return 1;
+    }
+
+    /* step 2: publish data */
+    if (emcute_pub(&t,data, strlen(data), flags) != EMCUTE_OK) {
+        printf("error: unable to publish data to topic '%s [%i]'\n",
+                t.name, (int)t.id);
+        return 1;
+    }
+    printf("Published %i bytes to topic '%s [%i]'\n",
+            (int)strlen(data), t.name, t.id);
+    
+    return 0;
+}
+
+int init_mqtt(void){
+    
+    /* initialize our subscription buffers */
+    memset(subscriptions, 0, (NUMOFSUBS * sizeof(emcute_sub_t)));
+
+    /* start the emcute thread */
+    thread_create(mqtt_handler_stack, sizeof(mqtt_handler_stack), EMCUTE_PRIO, 0,
+                  emcute_thread, NULL, "emcute");
+
+    // connect to MQTT-SN broker
+    printf("Connecting to MQTT-SN broker %s port %d.\n",
+           SERVER_ADDR, SERVER_PORT);
+
+    sock_udp_ep_t gw = { .family = AF_INET6, .port = SERVER_PORT };
+    char *topic = MQTT_TOPIC;
+    char *message = "connected";
+    size_t len = strlen(message);
+
+    /* parse address */
+    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, SERVER_ADDR) == NULL) {
+        printf("error parsing IPv6 address\n");
+        return 1;
+    }
+
+    if (emcute_con(&gw, true, topic, message, len, 0) != EMCUTE_OK) {
+        printf("error: unable to connect to [%s]:%i\n", SERVER_ADDR,
+               (int)gw.port);
+        return 1;
+    }
+
+    printf("Successfully connected to gateway at [%s]:%i\n",
+           SERVER_ADDR, (int)gw.port);
+
+    /* 
+     * setup subscription to topic
+    unsigned flags = EMCUTE_QOS_0;
+    subscriptions[0].cb = on_pub;
+    strcpy(topics[0], MQTT_TOPIC);
+    subscriptions[0].topic.name = MQTT_TOPIC;
+
+    if (emcute_sub(&subscriptions[0], flags) != EMCUTE_OK) {
+        printf("error: unable to subscribe to %s\n", MQTT_TOPIC);
+        return 1;
+    }
+
+    printf("Now subscribed to %s\n", MQTT_TOPIC);
+    */
+    return 0;
+}
+
+
+
+
+
+/* main interrupt handler */
 void* pir_handler(void *arg){
     
     (void)arg;
@@ -261,21 +277,36 @@ void* pir_handler(void *arg){
         printf("PIR handler got a message: ");
         switch (m.type) {
             case PIR_STATUS_ACTIVE: {
-                puts("something started moving.\n");
+                
+                //critical section start
+                //mutex_lock(&mutex);
+                
+                puts("[PIR]: Movement detected.\n");
+                
+                pir_last_awake_s=(xtimer_now_usec()-pir_last_awake_s*1000000)/1000000;
+                
+                /// bulb on
                 gpio_write(GPIO_PIN(PORT_B,5),1);
+                
+                
                 dht_temp_read();
 
                 sprintf(msg,"T:%.1f C H:%.1f%%",th[0]/10.0f,th[1]/10.0f);
-                printf("msg: %s\n",msg);
-                
+              
                 lcd_write(msg);
                 
-                mqtt_pub(MQTT_TOPIC_TO_AWS,msg);
+                sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
+                printf("json:\n%s\n",json);
+                mqtt_pub(MQTT_TOPIC_TO_AWS,json);
                 
+                //mutex_unlock(&mutex);
+                //critical section end
                 break;
             }
             case PIR_STATUS_INACTIVE:{
-                puts("the movement has ceased.");
+                puts("[PIR]: Movement has ceased.");
+                
+                /// bulb off
                 gpio_write(GPIO_PIN(PORT_B,5),0);
                 break;
             }
@@ -309,6 +340,9 @@ int main(void){
     // init lcd display 
     ret|=init_lcd();
     
+    //init mutex
+    mutex_init(&mutex);
+    
     //init mqtt client
     printf("[Start MQTT connection]\n");
     ret|=init_mqtt();
@@ -328,6 +362,28 @@ int main(void){
            pir_handler, NULL, "pir_handler");
     
     printf("[SETUP done!]\n");
+    
+    
+     
+    while(1){
+        //critical section start
+        mutex_lock(&mutex);
+                    
+        dht_temp_read();
+        
+        printf("Advertising...\n");
+        
+        sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
+        //printf("ADVV\n");
+        
+        mqtt_pub(MQTT_TOPIC_TO_AWS,json);
+        
+        mutex_unlock(&mutex);
+        //critical section end
+        
+        xtimer_sleep(30);
+    }
+    puts("MQTT adv: this should not have happened!");
     
     return 0;
 }
