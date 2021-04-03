@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 bin/
 .directory
+secret/
+node_modules
