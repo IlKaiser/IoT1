@@ -30,6 +30,7 @@
 #define TOPIC_MAXLEN        (64U)
 
 #define MQTT_TOPIC_TO_AWS   "iot/1/data"
+#define MQTT_TOPIC_FROM_AWS "both_directions"
 
 
 /*global variables*/
@@ -43,7 +44,7 @@ mutex_t mutex;
 
 //mqtt
 static emcute_sub_t subscriptions[NUMOFSUBS];
-//static char topics[NUMOFSUBS][TOPIC_MAXLEN];
+static char topics[NUMOFSUBS][TOPIC_MAXLEN];
 
 //device resources
 dht_t dht_dev;
@@ -58,6 +59,8 @@ char msg[32];
 char json[32];
 
 float pir_last_awake_s = 0;
+
+int auto_mode = 1;
 
 
 
@@ -168,7 +171,7 @@ static void *emcute_thread(void *arg){
     emcute_run(CONFIG_EMCUTE_DEFAULT_PORT, EMCUTE_ID);
     return NULL;    //should never be reached 
 }
-/*
+
 static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
     
     char *in = (char *)data;
@@ -179,8 +182,37 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
         printf("%c", in[i]);
     }
     puts("");
+    
+    if(!strcmp(in,"\"on\"")){
+        //critical section start
+        mutex_lock(&mutex);
+        
+        //auto off
+        auto_mode=0;
+        /// bulb on
+        gpio_write(GPIO_PIN(PORT_B,5),1);
+        
+        mutex_unlock(&mutex);
+        //critical section end
+                
+    }else if(!strcmp(in,"\"off\"")){
+         //critical section start
+        mutex_lock(&mutex);
+        
+        /// ...and off for now
+        gpio_write(GPIO_PIN(PORT_B,5),0);
+        
+        // auto on
+        auto_mode=1;
+        
+        mutex_unlock(&mutex);
+        //critical section end
+        
+    }else{
+        printf("Command not recognized\n");
+    }
 }
-*/
+
 
 static int mqtt_pub(char *topic,char *data){
     
@@ -222,7 +254,7 @@ int init_mqtt(void){
            SERVER_ADDR, SERVER_PORT);
 
     sock_udp_ep_t gw = { .family = AF_INET6, .port = SERVER_PORT };
-    char *topic = MQTT_TOPIC;
+    char *topic = MQTT_TOPIC_FROM_AWS;
     char *message = "connected";
     size_t len = strlen(message);
 
@@ -241,20 +273,19 @@ int init_mqtt(void){
     printf("Successfully connected to gateway at [%s]:%i\n",
            SERVER_ADDR, (int)gw.port);
 
-    /* 
-     * setup subscription to topic
+    /*setup subscription to topic*/
     unsigned flags = EMCUTE_QOS_0;
     subscriptions[0].cb = on_pub;
-    strcpy(topics[0], MQTT_TOPIC);
-    subscriptions[0].topic.name = MQTT_TOPIC;
+    strcpy(topics[0], MQTT_TOPIC_FROM_AWS);
+    subscriptions[0].topic.name = MQTT_TOPIC_FROM_AWS;
 
     if (emcute_sub(&subscriptions[0], flags) != EMCUTE_OK) {
-        printf("error: unable to subscribe to %s\n", MQTT_TOPIC);
+        printf("error: unable to subscribe to %s\n", MQTT_TOPIC_FROM_AWS);
         return 1;
     }
 
-    printf("Now subscribed to %s\n", MQTT_TOPIC);
-    */
+    printf("Now subscribed to %s\n", MQTT_TOPIC_FROM_AWS);
+    
     return 0;
 }
 
@@ -279,15 +310,18 @@ void* pir_handler(void *arg){
             case PIR_STATUS_ACTIVE: {
                 
                 //critical section start
-                //mutex_lock(&mutex);
+                mutex_lock(&mutex);
                 
                 puts("[PIR]: Movement detected.\n");
                 
                 pir_last_awake_s=(xtimer_now_usec()-pir_last_awake_s*1000000)/1000000;
                 
-                /// bulb on
-                gpio_write(GPIO_PIN(PORT_B,5),1);
                 
+                /* if bulb not light up from mqtt turn it on now */
+                if(auto_mode){
+                    /// bulb on
+                    gpio_write(GPIO_PIN(PORT_B,5),1);
+                }
                 
                 dht_temp_read();
 
@@ -299,7 +333,7 @@ void* pir_handler(void *arg){
                 printf("json:\n%s\n",json);
                 mqtt_pub(MQTT_TOPIC_TO_AWS,json);
                 
-                //mutex_unlock(&mutex);
+                mutex_unlock(&mutex);
                 //critical section end
                 break;
             }
