@@ -12,18 +12,118 @@
     <link rel="stylesheet" href="dashboard.css">  
     
     <!-- JS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
         //Get listener
         $.get( "/data", function( data ) {
-            $( "#display").text(data);
+            // parse data from get request
+            parsed_data = data.split(",\n");
+            // init table format
+            var final_html = "<table class=table>\n\
+                <thead>\n\
+                <tr>\n\
+                <th scope=col>#</th>\n\
+                <th scope=col>temp(C)</th>\n\
+                <th scope=col>hum(%)</th>\n\
+                <th scope=col>date</th>\n\
+                </tr>\n\
+                </thead>\n\
+                <tbody>";
+
+            // init average & max computing
+            var total_temp = 0;
+            var total_hum  = 0;
+            var max_temp   = 0;
+            var min_temp   = 999;
+            var max_hum    = 0;
+            var min_hum    = 999;
+            var cnt        = 0;
+            // init rows sorting
+            var timestamp_only = [];
+            var timestamp_and_html = [];
+
+            // analyze parsed data every two slices since we have:
+            // even index -> meausrements
+            // odd index  -> DB timestamp
+            for(i=0;i<parsed_data.length-1;i+=2){
+                // try parsing JSON
+                var json = "";
+                try {
+                    json = JSON.parse(parsed_data[i]);
+                } catch (error) {
+                    continue;
+                }
+                // display only data from selected timestamp
+                var date = new Date(parseInt(parsed_data[i+1]))
+                var ONE_HOUR = 60 * 60 * 1000; /* ms */
+                var myDate = new Date();
+                var four_days_ago = new Date(myDate.getTime() - ONE_HOUR*24*4);
+                
+                
+                if(date - four_days_ago > 0 ){
+                    // sorting stuff
+                    timestamp_only.push(parsed_data[i+1]);
+                    // average stuff
+                    total_hum+=json.humidity;
+                    total_temp+=json.temperature;
+                    cnt ++;
+                    // minmax
+                    if(json.temperature>max_temp){
+                        max_temp = json.temperature
+                    }
+                    else if(json.temperature<min_temp){
+                        min_temp = json.temperature
+                    }
+
+                    if(json.humidity>max_hum){
+                        max_hum = json.humidity
+                    }
+                    if(json.humidity<min_hum){
+                        min_hum = json.humidity
+                    }
+
+                    
+                    // human readable date
+                    mid =(date.getDate()) +
+                        "/"+(date.getMonth()+1)+
+                        "/"+date.getFullYear()+
+                        " "+date.getHours()+
+                        ":"+date.getMinutes()+
+                        ":"+date.getSeconds();
+                    // formatting table row
+                    var row = ""
+                    row+="<td>"+ json.temperature+"°C" +"</td>\n";
+                    row+="<td>"+ json.humidity+"%" +"</td>\n";
+                    row+="<td>"+ mid+"</td>\n";
+                    timestamp_and_html[parsed_data[i+1]]=row
+                }
+            }
+            // sort rows
+            timestamp_only.sort()
+            timestamp_only.reverse()
+            // crate the full row in the correct order
+            timestamp_only.forEach(function myFunction(value, index, array){
+                final_html+= "<tr>\n<th scope=row>"+ (index+1).toString(10) 
+                    +"</th>\n"+timestamp_and_html[value]+"</tr>\n";
+            });
+            final_html+=" </tbody>\n</table>";
+            // display table and average
+            $( "#display").html(final_html);
+            $( "#avg_t").text((total_temp/cnt).toFixed(1)+"°C");
+            $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
+            $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
+            $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
+            
+            
         });
     </script>
     <script>
         //Post on button_on pressed
         $( document ).ready(function() {
+            $("#lt").attr("visibility","hidden");
+            $("#lh").attr("visibility", "hidden");
             $("#button_on").click( function(){
                 $("#button_on").attr("disabled", true);
                
@@ -57,10 +157,11 @@
 </head>
 <body>
     <div class="container">
-        <div class="row">
-            <h1>Forza Giuve Sium</h1>
+        <div class="mx-auto row">
+            <h1>Home Station Controller</h1>
         </div>
-        <div class="row">
+        <div class=" mx-auto py-3 row">
+            <h2>Light Manual Controller</h3>
             <div class="col">
                 <button id="button_on" class="btn btn-primary">Light it up</button>
             </div>
@@ -68,7 +169,44 @@
                 <button id="button_off" class="btn btn-danger" disabled="true">Turn it off</button>
             </div>
         </div>
-        <div class="row">
+        <div class="mx-auto py-3 row">
+            <div class="col">
+                <h3>
+                    <label for="avg_t" id="lt">Average temperature in last hour</label>
+                </h3>
+                <h5>
+                    <div id="avg_t"></div>
+                </h5> 
+            </div>
+            <div class="col">
+                <h3>
+                    <label for="avg_h" id="lh">Average humidity in last hour</label>
+                </h3>
+                <h5>   
+                    <div id="avg_h"></div>
+                </h5> 
+            </div>
+        </div>
+        <div class="mx-auto py-3 row">
+            <div class="col">
+                <h4>
+                    <label for="max_t" id="mt">Min/Max temperature in last hour</label>
+                </h4>
+                <h5>
+                    <div id="max_t"></div>
+                </h5> 
+            </div>
+            <div class="col">
+                <h4>
+                    <label for="max_h" id="mh">Min/Max humidity in last hour</label>
+                </h4>
+                <h5>   
+                    <div id="max_h"></div>
+                </h5> 
+            </div>
+        </div>
+        <div class="mx-auto py-3 row">
+            <h2>Last hour meausrements</h2>
             <div id="display"></div>
         </div>
     </div>
