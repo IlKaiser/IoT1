@@ -25,8 +25,9 @@
                 <thead>\n\
                 <tr>\n\
                 <th scope=col>#</th>\n\
-                <th scope=col>temp(C)</th>\n\
+                <th scope=col>temp(°C)</th>\n\
                 <th scope=col>hum(%)</th>\n\
+                <th scope=col>last pir detection(sec)</th>\n\
                 <th scope=col>date</th>\n\
                 </tr>\n\
                 </thead>\n\
@@ -59,10 +60,10 @@
                 var date = new Date(parseInt(parsed_data[i+1]))
                 var ONE_HOUR = 60 * 60 * 1000; /* ms */
                 var myDate = new Date();
-                var four_days_ago = new Date(myDate.getTime() - ONE_HOUR*24*4);
+                var one_hour_ago = new Date(myDate.getTime() - ONE_HOUR);
                 
                 
-                if(date - four_days_ago > 0 ){
+                if(date - one_hour_ago > 0 ){
                     // sorting stuff
                     timestamp_only.push(parsed_data[i+1]);
                     // average stuff
@@ -96,6 +97,7 @@
                     var row = ""
                     row+="<td>"+ json.temperature+"°C" +"</td>\n";
                     row+="<td>"+ json.humidity+"%" +"</td>\n";
+                    row+="<td>"+ json.last_awake+"s from startup" +"</td>\n";
                     row+="<td>"+ mid+"</td>\n";
                     timestamp_and_html[parsed_data[i+1]]=row
                 }

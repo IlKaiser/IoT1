@@ -173,17 +173,17 @@ static void *emcute_thread(void *arg){
 }
 
 static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
-    
+    (void) len;
     char *in = (char *)data;
 
     printf("### got publication for topic '%s' [%i] ###\n",
            topic->name, (int)topic->id);
-    for (size_t i = 0; i < len; i++) {
+    /*for (size_t i = 0; i < len; i++) {
         printf("%c", in[i]);
-    }
-    puts("");
-    
-    if(!strcmp(in,"\"on\"")){
+    }*/
+    //puts("");
+    if(in[0]=='o' && in[1]=='n'){
+        printf("Light it up");
         //critical section start
         mutex_lock(&mutex);
         
@@ -195,7 +195,8 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
         mutex_unlock(&mutex);
         //critical section end
                 
-    }else if(!strcmp(in,"\"off\"")){
+    }else if(in[0]=='o' && in[1]=='f'&& in[2]=='f'){
+         printf("Turn it off");
          //critical section start
         mutex_lock(&mutex);
         
@@ -314,7 +315,7 @@ void* pir_handler(void *arg){
                 
                 puts("[PIR]: Movement detected.\n");
                 
-                pir_last_awake_s=(xtimer_now_usec()-pir_last_awake_s*1000000)/1000000;
+                pir_last_awake_s=(xtimer_now_usec()/1000000);
                 
                 
                 /* if bulb not light up from mqtt turn it on now */
@@ -329,9 +330,9 @@ void* pir_handler(void *arg){
               
                 lcd_write(msg);
                 
-                sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
-                printf("json:\n%s\n",json);
-                mqtt_pub(MQTT_TOPIC_TO_AWS,json);
+                //sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
+                //printf("json:\n%s\n",json);
+                //mqtt_pub(MQTT_TOPIC_TO_AWS,json);
                 
                 mutex_unlock(&mutex);
                 //critical section end
@@ -341,7 +342,9 @@ void* pir_handler(void *arg){
                 puts("[PIR]: Movement has ceased.");
                 
                 /// bulb off
-                gpio_write(GPIO_PIN(PORT_B,5),0);
+                if(auto_mode){
+                    gpio_write(GPIO_PIN(PORT_B,5),0);
+                }
                 break;
             }
             default:
@@ -407,7 +410,8 @@ int main(void){
         
         printf("Advertising...\n");
         
-        sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
+        sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",
+        th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
         //printf("ADVV\n");
         
         mqtt_pub(MQTT_TOPIC_TO_AWS,json);

@@ -32,13 +32,9 @@ var device = awsIot.device({
     host: "a1gznbp4fjkpqr-ats.iot.us-east-1.amazonaws.com"
 });
 
-//
-// Device is an instance returned by mqtt.Client(), see mqtt.js for full
-// documentation.
-//
 device
   .on('connect', function() {
-    console.log('connect');
+    console.log('Mqtt connected.');
     device.subscribe('topic_1');
     
   });
@@ -56,28 +52,10 @@ var params = {
     TableName: "wx_data"
 }
 
-/*              
-
-var query_params = {
-  TableName: 'wx_data',
-  KeyConditionExpression: 'sample_time > :t',
-  Limit: 1,
-  ScanIndexForward: false,    // true = ascending, false = descending
-  ExpressionAttributeValues: {
-      ':t': one_week_ago.toString()
-  }
-};
-
-docClient.query(query_params, function(err, data) {
-  if (err) {
-      console.log(JSON.stringify(err, null, 2));
-  }  data.Items.forEach(function(element, index, array) {
-    console.log(element.Title.S + " (" + element.Subtitle.S + ")");
-  });
-});
-*/
 console.log("Scanning...");
-docClient.scan(params, onScan);
+
+//setInterval(function scan(){ docClient.scan(params, onScan)},10000);
+docClient.scan(params, onScan)
 var final = "";
 function onScan(err, data) {
     if (err) {
@@ -86,14 +64,10 @@ function onScan(err, data) {
         // print all the movies
         console.log("Scan succeeded.");
         data.Items.forEach(function(measurement) {
-            //console.log(measurement.device_data);
+            
             if(measurement.device_data !== undefined){
-              var date = new Date(measurement.sample_time);
-              var mid = ""
-              mid += JSON.stringify(measurement.device_data)+",\n";
-              mid+= JSON.stringify(measurement.sample_time)+",\n";
-              console.log(mid)
-              final+=mid;
+              final += JSON.stringify(measurement.device_data)+",\n";
+              final += JSON.stringify(measurement.sample_time)+",\n";
             }
             
         });
@@ -105,7 +79,7 @@ function onScan(err, data) {
 
 app.post("/mqtt", function (req, res) {
     console.log(req.body.turn);
-    device.publish('both_directions', JSON.stringify(req.body.turn));
+    device.publish('both_directions', req.body.turn);
 });
 app.listen(port);
 
