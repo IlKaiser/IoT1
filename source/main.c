@@ -311,7 +311,7 @@ void* pir_handler(void *arg){
                 pir_last_awake_s=xtimer_now_usec();
                 
                 
-                /* if bulb not light up from mqtt turn it on now */
+                /* if bulb not lighten up from mqtt turn it on now */
                 if(auto_mode){
                     /// bulb on
                     gpio_write(GPIO_PIN(PORT_B,5),1);
@@ -330,7 +330,7 @@ void* pir_handler(void *arg){
             case PIR_STATUS_INACTIVE:{
                 puts("[PIR]: Movement has ceased.");
                 
-               /* if bulb not on from mqtt turn it on now */
+               /* if bulb was not turned on from mqtt turn it off now */
                 if(auto_mode){
                      /// bulb off
                     gpio_write(GPIO_PIN(PORT_B,5),0);
