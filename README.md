@@ -3,7 +3,7 @@
 
 ## Smart Home
 
-### What is the problem and why do you need IoT?
+### What is the problem and why do i need IoT?
 I would like to have an all-in-one monitor for smart home: i would like to have the light that turns on when i am in the room and turns off when i leave. I also want to monitor temperature
 and humidity in my room. 
 For movement detection i used an **HC-SR501 PIR** sensor that in RIOT OS send a notification every time a movement is started or ended. The temperature and humidity will be monitored by a **DHT11 sensor**.
