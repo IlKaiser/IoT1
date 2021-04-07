@@ -1,0 +1,7 @@
+Table Name: wx_data
+Hash key: sample_time
+Hash key value: ${timestamp()}
+Interval key: device_id
+Interval key value: ${cast(topic(2) as decimal)}
+Write message data in this column: device_data
+IAM Role: service-role/wx_dbb_role 
