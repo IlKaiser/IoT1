@@ -54,25 +54,23 @@ var params = {
 
 console.log("Scanning...");
 
-//setInterval(function scan(){ docClient.scan(params, onScan)},10000);
-docClient.scan(params, onScan)
+setInterval(function scan(){ docClient.scan(params, onScan)},10000);
+//docClient.scan(params, onScan)
 var final = "";
 function onScan(err, data) {
     if (err) {
         console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
     } else {
-        // print all the movies
+        // send all datas
         console.log("Scan succeeded.");
-        data.Items.forEach(function(measurement) {
-            
-            if(measurement.device_data !== undefined){
-              final += JSON.stringify(measurement.device_data)+",\n";
-              final += JSON.stringify(measurement.sample_time)+",\n";
-            }
-            
+        data.Items.forEach(function(measurement) {    
+          if(measurement.device_data !== undefined){
+            final += JSON.stringify(measurement.device_data)+",\n";
+            final += JSON.stringify(measurement.sample_time)+",\n";
+          }
         });
         app.get("/data",function(req, res){
-            res.send(final); //replace with your data here
+            res.send(final); 
         })
     }
 }

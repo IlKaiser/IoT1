@@ -17,108 +17,119 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
         //Get listener
-        $.get( "/data", function( data ) {
-            // parse data from get request
-            parsed_data = data.split(",\n");
-            // init table format
-            var final_html = "<table class=table>\n\
-                <thead>\n\
-                <tr>\n\
-                <th scope=col>#</th>\n\
-                <th scope=col>temp(°C)</th>\n\
-                <th scope=col>hum(%)</th>\n\
-                <th scope=col>last pir detection(sec)</th>\n\
-                <th scope=col>date</th>\n\
-                </tr>\n\
-                </thead>\n\
-                <tbody>";
+        function refresh(){
+            $.get( "/data", function( data ) {
+                // parse data from get request
+                parsed_data = data.split(",\n");
+                // init table format
+                var final_html = "<table class=table>\n\
+                    <thead>\n\
+                    <tr>\n\
+                    <th scope=col>#</th>\n\
+                    <th scope=col>temp(°C)</th>\n\
+                    <th scope=col>hum(%)</th>\n\
+                    <th scope=col>last pir detection(sec)</th>\n\
+                    <th scope=col>date</th>\n\
+                    </tr>\n\
+                    </thead>\n\
+                    <tbody>";
 
-            // init average & max computing
-            var total_temp = 0;
-            var total_hum  = 0;
-            var max_temp   = 0;
-            var min_temp   = 999;
-            var max_hum    = 0;
-            var min_hum    = 999;
-            var cnt        = 0;
-            // init rows sorting
-            var timestamp_only = [];
-            var timestamp_and_html = [];
+                // init average & max computing
+                var total_temp = 0;
+                var total_hum  = 0;
+                var max_temp   = 0;
+                var min_temp   = 99;
+                var max_hum    = 0;
+                var min_hum    = 99;
+                var cnt        = 0;
+                // init rows sorting
+                // no dup
+                var timestamp_only = [...new Set(array)];
+                var timestamp_and_html = [];
 
-            // analyze parsed data every two slices since we have:
-            // even index -> meausrements
-            // odd index  -> DB timestamp
-            for(i=0;i<parsed_data.length-1;i+=2){
-                // try parsing JSON
-                var json = "";
-                try {
-                    json = JSON.parse(parsed_data[i]);
-                } catch (error) {
-                    continue;
-                }
-                // display only data from selected timestamp
-                var date = new Date(parseInt(parsed_data[i+1]))
-                var ONE_HOUR = 60 * 60 * 1000; /* ms */
-                var myDate = new Date();
-                var one_hour_ago = new Date(myDate.getTime() - ONE_HOUR);
-                
-                
-                if(date - one_hour_ago > 0 ){
-                    // sorting stuff
-                    timestamp_only.push(parsed_data[i+1]);
-                    // average stuff
-                    total_hum+=json.humidity;
-                    total_temp+=json.temperature;
-                    cnt ++;
-                    // minmax
-                    if(json.temperature>max_temp){
-                        max_temp = json.temperature
+                // analyze parsed data every two slices since we have:
+                // even index -> meausrements
+                // odd index  -> DB timestamp
+                for(i=0;i<parsed_data.length-1;i+=2){
+                    // try parsing JSON
+                    var json = "";
+                    try {
+                        json = JSON.parse(parsed_data[i]);
+                    } catch (error) {
+                        continue;
                     }
-                    else if(json.temperature<min_temp){
-                        min_temp = json.temperature
-                    }
-
-                    if(json.humidity>max_hum){
-                        max_hum = json.humidity
-                    }
-                    if(json.humidity<min_hum){
-                        min_hum = json.humidity
-                    }
-
+                    // display only data from selected timestamp
+                    var date = new Date(parseInt(parsed_data[i+1]))
+                    var ONE_HOUR = 60 * 60 * 1000; /* ms */
+                    var myDate = new Date();
+                    var one_hour_ago = new Date(myDate.getTime() - ONE_HOUR);
                     
-                    // human readable date
-                    mid =(date.getDate()) +
-                        "/"+(date.getMonth()+1)+
-                        "/"+date.getFullYear()+
-                        " "+date.getHours()+
-                        ":"+date.getMinutes()+
-                        ":"+date.getSeconds();
-                    // formatting table row
-                    var row = ""
-                    row+="<td>"+ json.temperature+"°C" +"</td>\n";
-                    row+="<td>"+ json.humidity+"%" +"</td>\n";
-                    row+="<td>"+ json.last_awake+"s from startup" +"</td>\n";
-                    row+="<td>"+ mid+"</td>\n";
-                    timestamp_and_html[parsed_data[i+1]]=row
+                    
+                    if(date - one_hour_ago > 0 ){
+                        // sorting stuff
+                        timestamp_only.push(parsed_data[i+1]);
+                        // average stuff
+                        total_hum+=json.humidity;
+                        total_temp+=json.temperature;
+                        cnt ++;
+                        // minmax
+                        if(json.temperature>max_temp){
+                            max_temp = json.temperature
+                        }
+                        else if(json.temperature<min_temp){
+                            min_temp = json.temperature
+                        }
+
+                        if(json.humidity>max_hum){
+                            max_hum = json.humidity
+                        }
+                        if(json.humidity<min_hum){
+                            min_hum = json.humidity
+                        }
+
+                        
+                        // human readable date
+                        mid =(date.getDate()) +
+                            "/"+(date.getMonth()+1)+
+                            "/"+date.getFullYear()+
+                            " "+date.getHours()+
+                            ":"+date.getMinutes()+
+                            ":"+date.getSeconds();
+                        // formatting table row
+                        var row = ""
+                        row+="<td>"+ json.temperature+"°C" +"</td>\n";
+                        row+="<td>"+ json.humidity+"%" +"</td>\n";
+                        if(json.last_awake === 0)
+                            row+="<td>"+"Pir not yet triggered" +"</td>\n";
+                        else
+                            row+="<td>"+ json.last_awake+"s ago" +"</td>\n";
+                        row+="<td>"+ mid+"</td>\n";
+                        timestamp_and_html[parsed_data[i+1]]=row
+                    }
                 }
-            }
-            // sort rows
-            timestamp_only.sort()
-            timestamp_only.reverse()
-            // crate the full row in the correct order
-            timestamp_only.forEach(function myFunction(value, index, array){
-                final_html+= "<tr>\n<th scope=row>"+ (index+1).toString(10) 
-                    +"</th>\n"+timestamp_and_html[value]+"</tr>\n";
+                // sort rows
+                timestamp_only.sort()
+                timestamp_only.reverse()
+                // crate the full row in the correct order
+                timestamp_only.forEach(function myFunction(value, index, array){
+                    final_html+= "<tr>\n<th scope=row>"+ (index+1).toString(10) 
+                        +"</th>\n"+timestamp_and_html[value]+"</tr>\n";
+                });
+                final_html+=" </tbody>\n</table>";
+                // display table and average
+                $( "#display").html(final_html);
+                $( "#avg_t").text((total_temp/cnt).toFixed(1)+"°C");
+                $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
+                $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
+                $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
+                
+                //console.log("rfrsh");
             });
-            final_html+=" </tbody>\n</table>";
-            // display table and average
-            $( "#display").html(final_html);
-            $( "#avg_t").text((total_temp/cnt).toFixed(1)+"°C");
-            $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
-            $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
-            $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
-            
-            
+        }
+        // Starts processing when document is ready.
+        $(function() {
+            refresh();
+            setInterval(refresh, 10000);
         });
     </script>
     <script>

@@ -104,12 +104,8 @@ int lcd_write(char msg[]){
     
     //set cursor to second line and write 
     hd44780_set_cursor(&display_dev, 0, 1);
-    char time[65];
-    timex_t timex;
-    xtimer_now_timex(&timex);
-    timex_to_str(timex,time);
-    printf("Time %s\n",time);
-    hd44780_print(&display_dev,strcat(time,"Up"));
+    // greetings :)
+    hd44780_print(&display_dev,"Welcome!");
 
     return 0;
 }
@@ -178,10 +174,7 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
 
     printf("### got publication for topic '%s' [%i] ###\n",
            topic->name, (int)topic->id);
-    /*for (size_t i = 0; i < len; i++) {
-        printf("%c", in[i]);
-    }*/
-    //puts("");
+    
     if(in[0]=='o' && in[1]=='n'){
         printf("Light it up");
         //critical section start
@@ -315,7 +308,7 @@ void* pir_handler(void *arg){
                 
                 puts("[PIR]: Movement detected.\n");
                 
-                pir_last_awake_s=(xtimer_now_usec()/1000000);
+                pir_last_awake_s=xtimer_now_usec();
                 
                 
                 /* if bulb not light up from mqtt turn it on now */
@@ -330,10 +323,6 @@ void* pir_handler(void *arg){
               
                 lcd_write(msg);
                 
-                //sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
-                //printf("json:\n%s\n",json);
-                //mqtt_pub(MQTT_TOPIC_TO_AWS,json);
-                
                 mutex_unlock(&mutex);
                 //critical section end
                 break;
@@ -341,8 +330,9 @@ void* pir_handler(void *arg){
             case PIR_STATUS_INACTIVE:{
                 puts("[PIR]: Movement has ceased.");
                 
-                /// bulb off
+               /* if bulb not on from mqtt turn it on now */
                 if(auto_mode){
+                     /// bulb off
                     gpio_write(GPIO_PIN(PORT_B,5),0);
                 }
                 break;
@@ -401,7 +391,7 @@ int main(void){
     printf("[SETUP done!]\n");
     
     
-     
+    /* MQTT advertising every 30s */
     while(1){
         //critical section start
         mutex_lock(&mutex);
@@ -411,8 +401,7 @@ int main(void){
         printf("Advertising...\n");
         
         sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",
-        th[0]/10.0f,th[1]/10.0f,pir_last_awake_s);
-        //printf("ADVV\n");
+        th[0]/10.0f,th[1]/10.0f,pir_last_awake_s == 0 ? 0.0f : (xtimer_now_usec() - pir_last_awake_s)/1000000 );
         
         mqtt_pub(MQTT_TOPIC_TO_AWS,json);
         
