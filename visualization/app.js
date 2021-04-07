@@ -53,9 +53,9 @@ var params = {
 }
 
 console.log("Scanning...");
-
+docClient.scan(params, onScan)
 setInterval(function scan(){ docClient.scan(params, onScan)},10000);
-//docClient.scan(params, onScan)
+
 var final = "";
 function onScan(err, data) {
     if (err) {

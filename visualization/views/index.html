@@ -43,8 +43,7 @@
                 var min_hum    = 99;
                 var cnt        = 0;
                 // init rows sorting
-                // no dup
-                var timestamp_only = [...new Set(array)];
+                var timestamp_only = [];
                 var timestamp_and_html = [];
 
                 // analyze parsed data every two slices since we have:
@@ -110,6 +109,10 @@
                 // sort rows
                 timestamp_only.sort()
                 timestamp_only.reverse()
+                //no duplicates
+                timestamp_only = timestamp_only.filter(function(item, pos) {
+                    return timestamp_only.indexOf(item) == pos;
+                });
                 // crate the full row in the correct order
                 timestamp_only.forEach(function myFunction(value, index, array){
                     final_html+= "<tr>\n<th scope=row>"+ (index+1).toString(10) 
