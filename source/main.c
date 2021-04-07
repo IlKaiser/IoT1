@@ -329,12 +329,16 @@ void* pir_handler(void *arg){
             }
             case PIR_STATUS_INACTIVE:{
                 puts("[PIR]: Movement has ceased.");
-                
+                  
+                //critical section start
+                mutex_lock(&mutex);
                /* if bulb was not turned on from mqtt turn it off now */
                 if(auto_mode){
                      /// bulb off
                     gpio_write(GPIO_PIN(PORT_B,5),0);
                 }
+                mutex_unlock(&mutex);
+                //critical section end
                 break;
             }
             default:
