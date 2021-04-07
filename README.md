@@ -1,11 +1,13 @@
 # Internet of Things 20/21 assignment one
 
 
-## Smart Home
+# Smart Home
 
-### What is the problem and why do i need IoT?
-I would like to have an all-in-one monitor for smart home: i would like to have the light that turns on when i am in the room and turns off when i leave. I also want to monitor temperature
-and humidity in my room. 
+## What is the problem and why do i need IoT?
+I want to develop an all-in-one smart monitor for my home: i would like to have the light that turns on when i am in the room and turns off when i leave. I also want to monitor temperature
+and humidity in the room. 
+
+## Sensor Chosen
 For movement detection i used an **HC-SR501 PIR** sensor that in RIOT OS send a notification every time a movement is started or ended. The temperature and humidity will be monitored by a **DHT11 sensor**.
 The actuator i chose are a **Relay** in combination with a **lightbulb** in order to turn the lights on in an automatic way and a simple 16x2 **LCD display** that prints the temperature and humidity every time a movement is detected.
 The sensor polling will be event driven: when the PIR sensor detects a movement the aforementioned routine starts. The PIR sensor is in costant polling.
@@ -84,11 +86,11 @@ The data coming from sensors are aggregated via RIOT OS: when PIR sensor detects
 Use the STM32 Nucleo F401RE board with RIOT OS. MQTT advertisng on "/iot/1/data" every 30 seconds with sensors data.
 
 #### MQTT-SN RSMB broker
-Config on [this path](./config/rsmb_local.conf). It forwards from/to the transparent bridge "/iot/+/data" (from the board, and where the '+' is a wildcard for device id) and "both_direction" (from the board to AWS and to the board from AWS)
+Config file on [this path](./config/rsmb_local.conf). It forwards from/to the transparent bridge "/iot/+/data" (from the board, and where the '+' is a wildcard for device id) and "both_direction" (from the board to AWS and to the board from AWS) topics.
 
 ### Bridge
 #### MQTT-SN/MQTT Mosquitto transparent bridge
-Config on [this path](./config/m_bridge.conf). It forwards from/to IoT Core MQTT "/iot/+/data" (from the board) and "both_direction" (from the board to AWS and to the board from AWS)
+Config file on [this path](./config/m_bridge.conf). It forwards from/to IoT Core MQTT "/iot/+/data" (from the board) and "both_direction" (from the board to AWS and to the board from AWS) topics.
 
 ### Cloud Level
 
@@ -112,10 +114,10 @@ Npm packages used are:
 
 Tables are refreshed every 10s.
 
-What are the connected components, the protocols to connect them and the overall IoT architecture?
+[//]: <> (What are the connected components, the protocols to connect them and the overall IoT architecture?
 Provide a network diagram that includes all the devices and identifies the network and communication protocols used to interconnect them.
 Identify the software components that make up your system both at IoT device level and at cloud level.
-Provide a high-level architecture diagram that depicts the interdependencies of your software components.
+Provide a high-level architecture diagram that depicts the interdependencies of your software components.)
 
 ## Architecture and Network diagram
 
@@ -126,6 +128,9 @@ Provide a high-level architecture diagram that depicts the interdependencies of 
 **Make sure to have credentials saved on ~/.aws/credentials before trying to run anything.**
 
 **RSMB broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
+
+
+**MQTT-SN/MQTT Mosquitto Transparent Bridge should already be running before launching scripts**.
 
 Use this bash simple scrips in order to compile the code, flash it on nucleo board, install npm dependencies and run the dashboard on localhost.
 
@@ -150,7 +155,7 @@ Use this bash simple scrips in order to compile the code, flash it on nucleo boa
 <img src="./imgs/on.jpg" width="600" height="400">
 
 #### Dashboard
-<img src="./imgs/dashboard.png" width="800" height="400">
+<img src="./imgs/dashboard.png" width="800" height="370">
 
 
 
