@@ -42,6 +42,7 @@
                 var max_hum    = 0;
                 var min_hum    = 99;
                 var cnt        = 0;
+                
                 // init rows sorting
                 var timestamp_only = [];
                 var timestamp_and_html = [];
@@ -125,8 +126,6 @@
                 $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
                 $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
                 $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
-                
-                //console.log("rfrsh");
             });
         }
         // Starts processing when document is ready.
