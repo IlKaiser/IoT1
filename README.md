@@ -7,7 +7,7 @@
 I want to develop an all-in-one smart monitor for my home: i would like to have the light that turns on when i am in the room and turns off when i leave. I also want to monitor temperature
 and humidity in the room. 
 
-## Sensor Chosen
+## Sensors and Actuators chosen
 For movement detection i used an **HC-SR501 PIR** sensor that in RIOT OS send a notification every time a movement is started or ended. The temperature and humidity will be monitored by a **DHT11 sensor**.
 The actuator i chose are a **Relay** in combination with a **lightbulb** in order to turn the lights on in an automatic way and a simple 16x2 **LCD display** that prints the temperature and humidity every time a movement is detected.
 The sensor polling will be event driven: when the PIR sensor detects a movement the aforementioned routine starts. The PIR sensor is in costant polling.
