@@ -22,7 +22,8 @@
                 // parse data from get request
                 parsed_data = data.split(",\n");
                 // init table format
-                var final_html = "<table class=table>\n\
+                var final_html = "<h5>Last update: "+ new Date().toLocaleString()  +"</h5>\n\
+                    <table class=table>\n\
                     <thead>\n\
                     <tr>\n\
                     <th scope=col>#</th>\n\
@@ -122,10 +123,18 @@
                 final_html+=" </tbody>\n</table>";
                 // display table and average
                 $( "#display").html(final_html);
-                $( "#avg_t").text((total_temp/cnt).toFixed(1)+"°C");
-                $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
-                $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
-                $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
+                if (min_temp == 99 || max_temp == 0){
+                    $( "#avg_t").text("No data received in last hour");
+                    $( "#avg_h").text("No data received in last hour");
+                    $( "#max_t").text("No data received in last hour");
+                    $( "#max_h").text("No data received in last hour");
+                }
+                else{
+                    $( "#avg_t").text((total_temp/cnt).toFixed(1)+"°C");
+                    $( "#avg_h").text((total_hum/cnt).toFixed(1)+"%");
+                    $( "#max_t").text(min_temp+"°C"+"/"+max_temp+"°C");
+                    $( "#max_h").text(min_hum+"%"+"/"+max_hum+"%");
+                }
             });
         }
         // Starts processing when document is ready.

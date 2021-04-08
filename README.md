@@ -3,16 +3,16 @@
 
 # Smart Home
 
-## What is the problem and why do i need IoT?
-I want to develop an all-in-one smart monitor for my home: i would like to have the light that turns on when i am in the room and turns off when i leave. I also want to monitor temperature
-and humidity in the room. 
+## Problem definition and why i need IoT
+I want to develop an all-in-one smart monitor for my home: i would like to have the lights that turn on when i enter the room and turn off when i leave. I also want to monitor temperature
+and humidity. 
 
 ## Sensors and Actuators chosen
 For movement detection i used an **HC-SR501 PIR** sensor that in RIOT OS send a notification every time a movement is started or ended. The temperature and humidity will be monitored by a **DHT11 sensor**.
-The actuator i chose are a **Relay** in combination with a **lightbulb** in order to turn the lights on in an automatic way and a simple 16x2 **LCD display** that prints the temperature and humidity every time a movement is detected.
-The sensor polling will be event driven: when the PIR sensor detects a movement the aforementioned routine starts. The PIR sensor is in costant polling.
+The actuator i chose are a **Relay** in combination with a **lightbulb** in order to turn the lights on in an automatic way and a simple **16x2 LCD display** that prints the temperature and humidity every time a movement is detected.
+The DHT11 sensor polling will be event driven: when the PIR sensor detects a movement the aforementioned routine starts. DHT11 is also polled on MQTT publish every 30s. The PIR sensor is in continuous polling.
 
-## Circuit Setup 
+## Circuit Setup
 ![Png](./source/circuit_setup/circuit.png)
 
 ### DHT11 temperature & humidity Sensor
@@ -47,7 +47,7 @@ The sensor polling will be event driven: when the PIR sensor detects a movement 
 - The system is constant polling, waiting for event detection.
 
 
-### LCD display
+### LCD display 16x2
 <img src="./imgs/lcd.jpg" width="200" height="150">
 
 [HD44780 module](http://doc.riot-os.org/group__drivers__hd44780.html) used in RIOT OS for display driver.
@@ -73,10 +73,10 @@ The sensor polling will be event driven: when the PIR sensor detects a movement 
 - Current when the relay is active: ~70mA
 - Relay maximum contact voltage – 250VAC or 30VDC
 - Relay maximum current – 10A
-- Turns on bulb manually from MQTT or automatically from PIR interrupt
+- Turns on bulb manually from MQTT request from dashboard or automatically from PIR interrupt
 
 ## Data Analysis and Collective Intelligence
-The data coming from sensors are aggregated via RIOT OS: when PIR sensor detects a movement the relay is triggered and the bulb turns on; the lcd display prints temperature and humidity. The collective intelligence i expect is a smart way to monitor home environment, also with nodejs dashboard when is possible to manually turn on the light and have all datas from sensors aggregated.
+The data coming from sensors are aggregated via RIOT OS: when PIR sensor detects a movement the relay is triggered and the bulb turns on; the lcd display prints temperature and humidity. Bulb activation can also happen manually via MQTT from the dashboard. The collective intelligence i expect is a smart way to monitor home environment, and an increase to the level of comfort and awareness.
 
 ## Connected Components
 
@@ -90,21 +90,31 @@ Config file on [this path](./config/rsmb_local.conf). It forwards from/to the tr
 
 ### Bridge
 #### MQTT-SN/MQTT Mosquitto transparent bridge
-Config file on [this path](./config/m_bridge.conf). It forwards from/to IoT Core MQTT "/iot/+/data" (from the board) and "both_direction" (from the board to AWS and to the board from AWS) topics.
+Config file on [this path](./config/m_bridge.conf). It forwards from/to IoT Core MQTT "/iot/+/data" and "both_direction" topics.
 
 ### Cloud Level
 
 ### Cloud-based IoT Backend
-MQTT from IoT Core is used to recive messages from the board. With a custom [policy](./config/IoT_core_rule_wrap) on AWS data coming from topic "/iot/+/data"  with sensor data are stored on DynamoDB along with timestamp.
+MQTT from IoT Core is used to recive messages from the board. With a custom [policy](./config/IoT_core_rule_wrap) on AWS data coming from topic "/iot/+/data"  with sensor data are stored on DynamoDB along with timestamp in wx_data table.
 
+#### DynamoDB wx_data table structure
+```
++-------------+-----------+-------------+
+|               wx_data                 |
++-------------+-----------+-------------+
+| sample_time | device_id | device_data |
++-------------+-----------+-------------+
+```
 ### Web-based Dashboard
 NodeJS based backend and Html/JavaScript dashboard, Bootstap is used for interface design. AWS api are used in order to connect to MQTT and to DynamoDB. At application startup data are are queried from DynamoDB and manually filtered and aggregated in order to diplay:
 
 - The latest values received from all the sensors (first row on the table)
-- The aggregated values (average, minimum and maximum) for each sensor during the last hour.
-- The values received during the last hour from all sensors.
-- Turn manually On/Off the bulb, by MQTT posting.
+- The aggregated values (average, minimum and maximum) for each sensor during the last hour
+- The values received during the last hour from all sensors
+- Turn manually On/Off the bulb, by MQTT posting
+- Table is updatated every 10s
 
+#### Npm dependendencies
 Npm packages used are:
 
 - **aws-iot-device-sdk** for IoT Core MQTT
@@ -112,28 +122,37 @@ Npm packages used are:
 - **express** for html communication
 - **html** for starting html server
 
-Tables are refreshed every 10s.
-
-[//]: <> (What are the connected components, the protocols to connect them and the overall IoT architecture?
-Provide a network diagram that includes all the devices and identifies the network and communication protocols used to interconnect them.
-Identify the software components that make up your system both at IoT device level and at cloud level.
-Provide a high-level architecture diagram that depicts the interdependencies of your software components.)
 
 ## Architecture and Network diagram
 
-<img src="./imgs/scheme.png" width="700" height="400">
+<img src="./imgs/scheme.png" width="700" height="420">
+
+### Network Technologies used
+- UDP/IPv6 with [ethos](https://api.riot-os.org/group__drivers__ethos.html) for Nucleo board
+- MQTT-SN RSMB, MQTT-SN/MQTT Mosquitto bridge and IoT Core MQTT
+- HTTP/REST for DB and MQTT communication.
 
 ## Quick Startup
 
-**Make sure to have credentials saved on ~/.aws/credentials before trying to run anything.**
+### Warnings
+- **Make sure to have AWS valid credentials saved on ~/.aws/credentials before trying to run anything.**
 
-**RSMB broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
+- **I created a /secret folder in [visualization](./visualization) folder with all credentials, for safety reasons not published on git**
+
+- **RIOT OS needs to be already set up**
+
+- **NodeJS and nmp needs to be already installed**
+
+- **AWS needs to be already setup with DynamoDB table, IoT Core MQTT object and IoT Core policy for data forward from MQTT to DB**
+
+- **RSMB broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
+
+- **MQTT-SN/MQTT Mosquitto Transparent Bridge should already be running before launching scripts**.
 
 
-**MQTT-SN/MQTT Mosquitto Transparent Bridge should already be running before launching scripts**.
+### Scripts
 
 Use this bash simple scrips in order to compile the code, flash it on nucleo board, install npm dependencies and run the dashboard on localhost.
-
 
 ```
 # install npm dependencies
