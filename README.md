@@ -143,7 +143,7 @@ Npm packages used are:
 
 - **NodeJS and nmp needs to be already installed**
 
-- **AWS needs to be already setup with DynamoDB table, IoT Core MQTT object and IoT Core policy for data forward from MQTT to DB**
+- **AWS needs to be already setup with DynamoDB table, IoT Core MQTT object and IoT Core policy for data forward from MQTT to DB ([tutorial](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ddb-rule.html) i followed)**
 
 - **RSMB broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
 
