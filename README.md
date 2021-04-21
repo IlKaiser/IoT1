@@ -147,7 +147,7 @@ Npm packages used are:
 
 - **[RSMB](https://github.com/eclipse/mosquitto.rsmb) broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
 
-- **MQTT-SN/MQTT(https://github.com/eclipse/mosquitto) Mosquitto Transparent Bridge should already be running before launching scripts**.
+- **[MQTT-SN/MQTT](https://github.com/eclipse/mosquitto) Mosquitto Transparent Bridge should already be running before launching scripts**.
 
 
 ### Scripts
