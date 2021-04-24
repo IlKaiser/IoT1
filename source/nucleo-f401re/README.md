@@ -1,4 +1,4 @@
-# gnrc_networking example [PLACEHOLDER]
+#  [PLACEHOLDER]
 
 This example shows you how to try out the code in two different ways:
 Either by communicating between the RIOT machine and its Linux host,
