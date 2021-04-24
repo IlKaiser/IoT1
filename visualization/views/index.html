@@ -30,6 +30,7 @@
                     <th scope=col>temp(°C)</th>\n\
                     <th scope=col>hum(%)</th>\n\
                     <th scope=col>last pir detection(sec)</th>\n\
+                    <th scope=col>device id</th>\n\
                     <th scope=col>date</th>\n\
                     </tr>\n\
                     </thead>\n\
@@ -48,10 +49,11 @@
                 var timestamp_only = [];
                 var timestamp_and_html = [];
 
-                // analyze parsed data every two slices since we have:
-                // even index -> meausrements
-                // odd index  -> DB timestamp
-                for(i=0;i<parsed_data.length-1;i+=2){
+                // analyze parsed data every three slices since we have:
+                // first  slice  -> Meausrements
+                // second slice  -> DB timestamp
+                // third  slice  -> Device id
+                for(i=0;i<parsed_data.length-2;i+=3){
                     // try parsing JSON
                     var json = "";
                     try {
@@ -69,6 +71,8 @@
                     if(date - one_hour_ago > 0 ){
                         // sorting stuff
                         timestamp_only.push(parsed_data[i+1]);
+                        // get device_id
+                        let device_id = parsed_data[i+2];
                         // average stuff
                         total_hum+=json.humidity;
                         total_temp+=json.temperature;
@@ -90,7 +94,7 @@
 
                         
                         // human readable date
-                        mid =(date.getDate()) +
+                        final_date =(date.getDate()) +
                             "/"+(date.getMonth()+1)+
                             "/"+date.getFullYear()+
                             " "+date.getHours()+
@@ -100,11 +104,15 @@
                         var row = ""
                         row+="<td>"+ json.temperature+"°C" +"</td>\n";
                         row+="<td>"+ json.humidity+"%" +"</td>\n";
+                        
                         if(json.last_awake === 0)
                             row+="<td>"+"Pir not yet triggered" +"</td>\n";
                         else
                             row+="<td>"+ json.last_awake+"s ago" +"</td>\n";
-                        row+="<td>"+ mid+"</td>\n";
+                        
+                        row+="<td>"+ device_id +"</td>\n";
+                        row+="<td>"+ final_date +"</td>\n";
+                        
                         timestamp_and_html[parsed_data[i+1]]=row
                     }
                 }

@@ -58,12 +58,12 @@ function onScan(err, data) {
           if(measurement.device_data !== undefined){
             final += JSON.stringify(measurement.device_data)+",\n";
             final += JSON.stringify(measurement.sample_time)+",\n";
+            final += JSON.stringify(measurement.device_id)+",\n";
           }
         });
         app.get("/data",function(req, res){
             res.send(final); 
         })
-        console.log("spam")
     }
 }
 
