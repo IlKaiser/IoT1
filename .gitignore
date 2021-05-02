@@ -54,3 +54,4 @@ bin/
 .directory
 secret/
 node_modules
+.vscode/
