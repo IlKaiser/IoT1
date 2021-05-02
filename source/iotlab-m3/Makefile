@@ -2,7 +2,8 @@
 APPLICATION = gnrc_networking
 
 # If no BOARD is found in the environment, use this default:
-BOARD ?= iotlab-a8-m3
+BOARD ?= iotlab-m3
+DEFAULT_CHANNEL ?= 22
 
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
@@ -86,7 +87,7 @@ CFLAGS += -DSERVER_PORT=$(SERVER_PORT)
 CFLAGS += -DMQTT_TOPIC='"$(MQTT_TOPIC)"'
 
 ETHOS_BAUDRATE ?= 115200
-include $(CURDIR)/Makefile.ethos.conf
+#include $(CURDIR)/Makefile.ethos.conf
 
 
 

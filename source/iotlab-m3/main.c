@@ -148,7 +148,7 @@ static int mqtt_pub(char *topic,char *data){
     return 0;
 }
 
-int init_mqtt(void){
+int init_mqtt(char* SERVER_ADDR_){
     
     /* initialize our subscription buffers */
     memset(subscriptions, 0, (NUMOFSUBS * sizeof(emcute_sub_t)));
@@ -159,7 +159,7 @@ int init_mqtt(void){
 
     // connect to MQTT-SN broker
     printf("Connecting to MQTT-SN broker %s port %d.\n",
-           SERVER_ADDR, SERVER_PORT);
+           SERVER_ADDR_, SERVER_PORT);
 
     sock_udp_ep_t gw = { .family = AF_INET6, .port = SERVER_PORT };
     char *topic = MQTT_TOPIC_FROM_AWS;
@@ -167,13 +167,13 @@ int init_mqtt(void){
     size_t len = strlen(message);
 
     /* parse address */
-    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, SERVER_ADDR) == NULL) {
+    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, SERVER_ADDR_) == NULL) {
         printf("error parsing IPv6 address\n");
         return 1;
     }
 
     if (emcute_con(&gw, true, topic, message, len, 0) != EMCUTE_OK) {
-        printf("error: unable to connect to [%s]:%i\n", SERVER_ADDR,
+        printf("error: unable to connect to [%s]:%i\n", SERVER_ADDR_,
                (int)gw.port);
         return 1;
     }
@@ -204,34 +204,17 @@ int init_mqtt(void){
 
 extern int udp_cmd(int argc, char **argv);
 
-static const shell_command_t shell_commands[] = {
-    { "udp", "send data over UDP and listen on UDP ports", udp_cmd },
-    { NULL, NULL, NULL }
-};
-
-int main(void)
-{
-    
-    int ret = 0;
-    /* we need a message queue for the thread running the shell in order to
-     * receive potentially fast incoming networking packets */
-    msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
-    puts("RIOT network stack example application");
-
-    //init mutex
-    mutex_init(&mutex);
-    
-    //init mqtt client
-    printf("[Start MQTT connection]\n");
-    ret|=init_mqtt();
-    printf("[MQTT connected]\n");
-    
-    /* Main Loop */
+int mqtt_cmd(int argc, char **argv){
+    if(argc < 2){
+        printf("Usage mqtt [addr]\n");
+        return -1;
+    }
+    init_mqtt(argv[1]);
      while(1){
         //critical section start
         mutex_lock(&mutex);
                     
-       // dht_temp_read();
+        dht_temp_read();
         
         printf("Advertising...\n");
         
@@ -245,6 +228,36 @@ int main(void)
         
         xtimer_sleep(30);
     }
+    /* never reached */
+    return 0;
+
+}
+
+static const shell_command_t shell_commands[] = {
+    { "udp", "send data over UDP and listen on UDP ports", udp_cmd },
+    { "mqtt", "setup mqtt s***", mqtt_cmd },
+    { NULL, NULL, NULL }
+};
+
+int main(void)
+{
+    
+    //int ret = 0;
+    /* we need a message queue for the thread running the shell in order to
+     * receive potentially fast incoming networking packets */
+    msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
+    puts("RIOT network stack example application");
+
+    //init mutex
+    mutex_init(&mutex);
+    
+    //init mqtt client
+    /*printf("[Start MQTT connection]\n");
+    ret|=init_mqtt();
+    printf("[MQTT connected]\n");*/
+    
+    /* Main Loop */
+    
     
     /* start shell ?*/
     puts("All up, running the shell now");
