@@ -22,6 +22,7 @@
 
 #include "msg.h"
 #include "mutex.h"
+#include "random.h"
 #include "shell.h"
 
 #include "net/emcute.h"
@@ -58,22 +59,19 @@ static char topics[NUMOFSUBS][TOPIC_MAXLEN];
 /*sycnchronized resources*/
 
 //message arrays
-int th[2];
+uint32_t th[2] = {200,600};
 char msg[32];
 char json[32];
 
-float pir_last_awake_s = 0;
-
-int auto_mode = 1;
-
-
+int device_id = 0;
 
 /* Fake DHT */
 void dht_temp_read(void) {
     
     
-    th[0] = 20.0; //TBR with random
-    th[1] = 50.0; //TBR with random
+    
+    th[0] = random_uint32_range (100, 300);
+    th[1] = random_uint32_range (400, 1000);
     
     return;
 }
@@ -93,28 +91,13 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
     printf("### got publication for topic '%s' [%i] ###\n",
            topic->name, (int)topic->id);
     
-    if(in[0]=='o' && in[1]=='n'){
+    if(in[0]=='o' && in[1]=='n' && (in[2]-'0') == device_id){
         printf("Light it up");
-        //critical section start
-        mutex_lock(&mutex);
-        
-        
-        mutex_unlock(&mutex);
-        //critical section end
                 
-    }else if(in[0]=='o' && in[1]=='f'&& in[2]=='f'){
+    }else if(in[0]=='o' && in[1]=='f'&& in[2]=='f'
+        && (in[2]-'0') == device_id
+    ){
          printf("Turn it off");
-         //critical section start
-        mutex_lock(&mutex);
-        
-        /// ...and off for now
-        gpio_write(GPIO_PIN(PORT_B,5),0);
-        
-        // auto on
-        auto_mode=1;
-        
-        mutex_unlock(&mutex);
-        //critical section end
         
     }else{
         printf("Command not recognized\n");
@@ -148,7 +131,7 @@ static int mqtt_pub(char *topic,char *data){
     return 0;
 }
 
-int init_mqtt(char* SERVER_ADDR_){
+int init_mqtt(char* _SERVER_ADDR_){
     
     /* initialize our subscription buffers */
     memset(subscriptions, 0, (NUMOFSUBS * sizeof(emcute_sub_t)));
@@ -159,7 +142,7 @@ int init_mqtt(char* SERVER_ADDR_){
 
     // connect to MQTT-SN broker
     printf("Connecting to MQTT-SN broker %s port %d.\n",
-           SERVER_ADDR_, SERVER_PORT);
+           _SERVER_ADDR_, SERVER_PORT);
 
     sock_udp_ep_t gw = { .family = AF_INET6, .port = SERVER_PORT };
     char *topic = MQTT_TOPIC_FROM_AWS;
@@ -167,13 +150,13 @@ int init_mqtt(char* SERVER_ADDR_){
     size_t len = strlen(message);
 
     /* parse address */
-    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, SERVER_ADDR_) == NULL) {
+    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, _SERVER_ADDR_) == NULL) {
         printf("error parsing IPv6 address\n");
         return 1;
     }
 
     if (emcute_con(&gw, true, topic, message, len, 0) != EMCUTE_OK) {
-        printf("error: unable to connect to [%s]:%i\n", SERVER_ADDR_,
+        printf("error: unable to connect to [%s]:%i\n", _SERVER_ADDR_,
                (int)gw.port);
         return 1;
     }
@@ -197,19 +180,28 @@ int init_mqtt(char* SERVER_ADDR_){
     return 0;
 }
 
-
-
-
-
-
-extern int udp_cmd(int argc, char **argv);
-
+/* mqtt new routine */
 int mqtt_cmd(int argc, char **argv){
-    if(argc < 2){
-        printf("Usage mqtt [addr]\n");
+    if(argc < 3){
+        printf("Usage mqtt [addr] [id]\n");
         return -1;
     }
     init_mqtt(argv[1]);
+    
+    
+    /* create correct topic and set devide_id*/
+    char mqtt_topic[11] = {'i','o','t','/','\0','\0','\0','\0','\0','\0','\0' };
+    
+    strcat(mqtt_topic,argv[2]);
+    strcat(mqtt_topic,"/data");
+    
+    
+    printf("Selected topic is: %s\n",mqtt_topic);
+    
+    device_id = atoi(argv[2]);
+    
+    printf("Device id is: %d\n",device_id);
+    
      while(1){
         //critical section start
         mutex_lock(&mutex);
@@ -219,9 +211,10 @@ int mqtt_cmd(int argc, char **argv){
         printf("Advertising...\n");
         
         sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",
-        th[0]/10.0f,th[1]/10.0f,pir_last_awake_s == 0 ? 0.0f : (xtimer_now_usec() - pir_last_awake_s)/1000000 );
+        th[0]/10.0f,th[1]/10.0f,random_uint32_range (0, 1000)/10.0f );
         
-        mqtt_pub(MQTT_TOPIC_TO_AWS,json);
+        
+        mqtt_pub(mqtt_topic,json);
         
         mutex_unlock(&mutex);
         //critical section end
@@ -234,15 +227,13 @@ int mqtt_cmd(int argc, char **argv){
 }
 
 static const shell_command_t shell_commands[] = {
-    { "udp", "send data over UDP and listen on UDP ports", udp_cmd },
-    { "mqtt", "setup mqtt s***", mqtt_cmd },
+    { "mqtt", "setup mqtt", mqtt_cmd },
     { NULL, NULL, NULL }
 };
 
 int main(void)
 {
     
-    //int ret = 0;
     /* we need a message queue for the thread running the shell in order to
      * receive potentially fast incoming networking packets */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
@@ -251,15 +242,14 @@ int main(void)
     //init mutex
     mutex_init(&mutex);
     
-    //init mqtt client
-    /*printf("[Start MQTT connection]\n");
-    ret|=init_mqtt();
-    printf("[MQTT connected]\n");*/
+    //init random 
+    random_init(0);
+    
     
     /* Main Loop */
     
     
-    /* start shell ?*/
+    /* start shell */
     puts("All up, running the shell now");
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);

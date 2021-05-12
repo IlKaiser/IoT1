@@ -1,4 +1,4 @@
-APPLICATION = smart-home
+APPLICATION = smart_home
 
 BOARD ?= native
 

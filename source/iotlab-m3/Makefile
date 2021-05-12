@@ -1,5 +1,5 @@
 # name of your application
-APPLICATION = gnrc_networking
+APPLICATION = iot_lab_smart_home
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= iotlab-m3
@@ -35,6 +35,12 @@ USEMODULE += netstats_rpl
 USEMODULE += gnrc_sock_check_reuse
 USEMODULE += gnrc_sock_udp
 USEMODULE += gnrc_ipv6
+
+# Print effin floats
+USEMODULE += printf_float
+
+# Random
+USEMODULE += random
 
 
 # Include MQTT-S client
