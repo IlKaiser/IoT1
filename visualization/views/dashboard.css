@@ -1,3 +1,15 @@
 h1{
-    color:black;
+    color:rgb(255, 102, 102);
 } 
+
+#mesurements_analysis{
+    font-weight: bold;
+}
+
+#lmc{
+    font-weight: bold;
+}
+
+#light_control_wrapper{
+    /*filter: drop-shadow(30px 10px 4px #0b0b0c);*/
+}

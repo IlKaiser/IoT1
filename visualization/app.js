@@ -69,8 +69,8 @@ function onScan(err, data) {
 
 /* Mqtt listener */
 app.post("/mqtt", function (req, res) {
-    console.log(req.body.turn);
-    device.publish('both_directions', req.body.turn);
+    console.log(req.body.turn + req.body.id);
+    device.publish('both_directions', req.body.turn + req.body.id);
 });
 
 setInterval(function scan(){ docClient.scan(params, onScan)},10000);
