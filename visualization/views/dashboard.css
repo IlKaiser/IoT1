@@ -9,7 +9,7 @@ h1{
 #lmc{
     font-weight: bold;
 }
-
-#light_control_wrapper{
-    /*filter: drop-shadow(30px 10px 4px #0b0b0c);*/
+#title{
+    font-weight: bold;
+    font-size: 4rem;
 }
