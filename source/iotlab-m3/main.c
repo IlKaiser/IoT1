@@ -68,8 +68,6 @@ int device_id = 0;
 /* Fake DHT */
 void dht_temp_read(void) {
     
-    
-    
     th[0] = random_uint32_range (100, 300);
     th[1] = random_uint32_range (400, 1000);
     

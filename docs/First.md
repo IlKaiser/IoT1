@@ -154,7 +154,7 @@ Npm packages used are:
 
 Use this bash simple scrips in order to compile the code, flash it on nucleo board, install npm dependencies and run the dashboard on localhost.
 
-```
+```sh
 # install npm dependencies
 ./install_dependencies.sh
 
@@ -176,5 +176,11 @@ Use this bash simple scrips in order to compile the code, flash it on nucleo boa
 #### Dashboard
 <img src="../imgs/dashboard.png" width="800" height="370">
 
+
+## More info on nucleo code
+For more inf on the code see [here](../source/nucleo-f401re/README.md)
+
+## More info on dashboard code
+For more inf on the code see [here](../visualization/README.md)
 
 
