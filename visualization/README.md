@@ -3,7 +3,7 @@
 The main code is in [app.js](./app.js) file. It is simple and pretty straightforward; it is divided in three logical blocks:
 - [Start http socket and dashboard](#http-socket)
 - [Scan DynamoDB](#scan-dynamodb)
-- [Publish on mqtt](#publish-on-mqtt)
+- [Publish on MQTT](#publish-on-mqtt)
 
 in the beginning are initialized all modules used:
 ```js
