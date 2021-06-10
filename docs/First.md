@@ -155,6 +155,9 @@ Npm packages used are:
 Use this bash simple scrips in order to compile the code, flash it on nucleo board, install npm dependencies and run the dashboard on localhost.
 
 ```sh
+
+cd scripts
+
 # install npm dependencies
 ./install_dependencies.sh
 
