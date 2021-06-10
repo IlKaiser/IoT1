@@ -1,6 +1,6 @@
 # Internet of Things 20/21 assignment two
 
-Most of the code and the setup is the same form assignment one. If some passage is not clear see [assignment one summary](./First.md) for reference.
+Most of the code and the setup is the same form assignment one. If some passage is not clear (e.g. AWS or web interface setup) see [assignment one summary](./First.md) for reference.
 # Start experiment
 To Start the experiments first setup an experiment on iot lab like this:
 <img src="../imgs/experiment.png" width="800" height="370">
