@@ -81,24 +81,49 @@ for more info of what does the code see [here](../source/iotlab-m3/README.md)
 # New dashboard
 <img src="../imgs/new_dashboard1.png" width="800" height="370">
 <img src="../imgs/new_dashboard2.png" width="800" height="370">
+<br/><br/>
+
 # Network Performances
-Network usage via iotlab anlytics does not look like was used, but probably is due to RIOT.
-<img src="../imgs/net.png" width="800" height="370">
+
+
+<p>
+ <img src="../imgs/net.png" width="300" height="250">
+ </p>
+ <p>
+    <em>Network usage via iotlab anlytics does not look like was used, but probably is due to RIOT.</em>
+</p>
 
 Infact we can see from ping statistics that the average delay with 802.15.4 mesh networking is always about 60ms, independetly from how many devices are connected to the network (up to 4 tested).
 <img src="../imgs/network.png" width="800" height="370">
 # Energy Consumption
 ## Main Device(s)
-This is the energy consuption on the node where my program was running: there is a clear first spike when the code is flashed on the device, and many smaller spikes on mqtt advertising.
-<img src="../imgs/power_dev.png" width="400" height="350">
-In detail the advertising phase
-<img src="../imgs/power_zoom.png" width="400" height="350">
+
+<p>
+   <img src="../imgs/power_dev.png" width="300" height="250">
+ </p><p>
+    <em>This is the energy consuption on the node where my program was running: there is a clear first spike when the code is flashed on the device, and many smaller spikes on mqtt advertising.</em>
+</p>
+
+<p>
+    <img src="../imgs/power_zoom.png" width="300" height="250">
+ </p>
+ <p>
+    <em>In detail the advertising phase</em>
+</p>
+
 ## Router Device
-The power cosumption on the router m3 node is slightly higher: the radio module is always active
-<img src="../imgs/power_router.png" width="400" height="350">
+
+<p>
+    <img src="../imgs/power_router.png" width="300" height="250">
+ </p><p>
+    <em>The power cosumption on the router m3 node is slightly higher: the radio module is always active</em>
+</p>
+
 ## A8 Device
-On the A8 devices power consuption is generally higher than m3 due to different architecture. We can also many spikes due to MQTT SN broker and MQTT SN-MQTT Mosquitto bridge: 
-<img src="../imgs/power_a8.png" width="400" height="350">
 
-
+<p>
+    <img src="../imgs/power_a8.png" width="300" height="250">
+ </p><p>
+    <em>On the A8 devices power consuption is generally higher than m3 due to different architecture. We can also many spikes due to MQTT SN broker and MQTT SN-MQTT Mosquitto bridge</em>
+</p>
 
