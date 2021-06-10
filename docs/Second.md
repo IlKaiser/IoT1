@@ -127,7 +127,7 @@ Infact we can see from ping statistics that the average delay with 802.15.4 mesh
     <em>On the A8 devices power consuption is generally higher than m3 due to different architecture. We can also many spikes due to MQTT SN broker and MQTT SN-MQTT Mosquitto bridge</em>
 </p>
 
-# Devie Scheme
+# Device and Network Scheme
 
 
 <p>
