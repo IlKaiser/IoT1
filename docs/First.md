@@ -178,9 +178,9 @@ Use this bash simple scrips in order to compile the code, flash it on nucleo boa
 
 
 ## More info on nucleo code
-For more inf on the code see [here](../source/nucleo-f401re/README.md)
+For more info on the code see [here](../source/nucleo-f401re/README.md)
 
 ## More info on dashboard code
-For more inf on the code see [here](../visualization/README.md)
+For more info on the code see [here](../visualization/README.md)
 
 
