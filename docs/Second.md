@@ -38,9 +38,9 @@ cd source/iotlab-m3
 make all
 scp bin/iotlab-m3/iot_lab_smart_home.elf login@saclay.iot-lab.info:~
 
-# Copy config
+# Copy config files
 cd ../..
-scp config/m_bridge_scalay.conf login@saclay.iot-lab.info:~/A8/mosquitto.conf 
+scp config/mosquitto_bridge_scalay.conf login@saclay.iot-lab.info:~/A8/mosquitto.conf 
 scp config/rsmb_saclay.conf login@saclay.iot-lab.info:~/A8/config.conf 
 
 # Copy credentials
