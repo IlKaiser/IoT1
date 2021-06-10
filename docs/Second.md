@@ -2,11 +2,13 @@
 
 Most of the code and the setup is the same form assignment one. If some passage is not clear see [assignment one summary](./First.md) for reference.
 # Start experiment
+To Start the experiments first setup an experiment on iot lab like this:
 <img src="../imgs/experiment.png" width="800" height="370">
 <img src="../imgs/profileA8.png" width="800" height="370">
 <img src="../imgs/profileM3.png" width="800" height="370">
 
 ## Commands
+Follow along to make everithing work:
 ### SSH into Saclay
 
 ```sh
@@ -90,7 +92,7 @@ for more info of what does the code see [here](../source/iotlab-m3/README.md)
  <img src="../imgs/net.png" width="300" height="250">
  </p>
  <p>
-    <em>Network usage via iotlab anlytics does not look like was used, but probably is due to RIOT.</em>
+    <em>From iotlab anlytics does not look like network was used, but this is probably due to RIOT.</em>
 </p>
 
 Infact we can see from ping statistics that the average delay with 802.15.4 mesh networking is always about 60ms, independetly from how many devices are connected to the network (up to 4 tested).
