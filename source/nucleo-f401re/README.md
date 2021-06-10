@@ -1,159 +1,179 @@
-#  [PLACEHOLDER]
+# Code for nucleo-f401re explained
 
-This example shows you how to try out the code in two different ways:
-Either by communicating between the RIOT machine and its Linux host,
-or by communicating between two RIOT instances.
-Note that the former only works with native, i.e. if you run RIOT on
-your Linux machine.
+All code necessary is in [main.c](./main.c) file. The code is organized in logical modules:
+- [Pir Module](#pir-module)
+- [Dht Module](#dht-module)
+- [LCD Module](#lcd-module)
+- [Mqtt Module](#mqtt-module)
 
-## Connecting RIOT native and the Linux host
+All code is started in main function, including necessary pin setup and mutext initialization (for multithread reading of pir and dht values).
+```c
+ int ret;
+    
+    // init relay pin
+    ret=gpio_init(GPIO_PIN(PORT_B, 5),GPIO_OUT);
+    
+    // init pir sensor
+    ret|=init_pir();
+    
+    // init dht sensor  
+    ret|=init_dht();
+    
+   
+    // init lcd display 
+    ret|=init_lcd();
+    
+    //init mutex
+    mutex_init(&mutex);
+    
+    //init mqtt client
+    printf("[Start MQTT connection]\n");
+    ret|=init_mqtt();
+    printf("[MQTT connected]\n");
+    
+    // check everithing is okay thus far
+    if(ret){
+        printf("[INIT devices failed]\n");
+        return -1;
+    }
+     printf("[INIT devices succeded]\n");
+    
+    //init pir interrupt routine
+    thread_create(
+           pir_handler_stack, sizeof(pir_handler_stack), THREAD_PRIORITY_MAIN - 1,
+           THREAD_CREATE_WOUT_YIELD | THREAD_CREATE_STACKTEST,
+           pir_handler, NULL, "pir_handler");
+    
+    printf("[SETUP done!]\n");
+```
+## Pir Module
+In this first part the is handled the message queue mantained by RIOT OS on PIR movement detection:
+```c
+void* pir_handler(void *arg){
+    
+    (void)arg;
+    msg_t msg_q[1];
+    msg_init_queue(msg_q, 1);
 
-> **Note:** RIOT does not support IPv4, so you need to stick to IPv6
-> anytime. To establish a connection between RIOT and the Linux host,
-> you will need `netcat` (with IPv6 support). Ubuntu 14.04 comes with
-> netcat IPv6 support pre-installed.
-> On Debian it's available in the package `netcat-openbsd`. Be aware
-> that many programs require you to add an option such as -6 to tell
-> them to use IPv6, otherwise they will fail. If you're using a
-> _Raspberry Pi_, run `sudo modprobe ipv6` before trying this example,
-> because raspbian does not load the IPv6 module automatically.
-> On some systems (openSUSE for example), the _firewall_ may interfere,
-> and prevent some packets to arrive at the application (they will
-> however show up in Wireshark, which can be confusing). So be sure to
-> adjust your firewall rules, or turn it off (who needs security
-> anyway).
+    printf("Registering PIR handler thread...     %s\n",
+           pir_register_thread(&pir_dev) == 0 ? "[OK]" : "[Failed]");
 
-First, make sure you've compiled the application by calling `make`.
+    msg_t m;
+    while (msg_receive(&m)) {
+```
+If a message is recieved a check is made to determine if a message refers to the start or the finish of the movement and actions are taken accordingly:
+```c
+        printf("PIR handler got a message: ");
+        switch (m.type) {
+            case PIR_STATUS_ACTIVE: {
+                
+                //critical section start
+                mutex_lock(&mutex);
+                
+                puts("[PIR]: Movement detected.\n");
+                
+                pir_last_awake_s=xtimer_now_usec();
+                
+```
+If the movement is started the bulb is turned on (if not already turned on from web interface), the dht sensor is polled and values are written on lcd: 
+```c
+                /* if bulb not lighten up from mqtt turn it on now */
+                if(auto_mode){
+                    /// bulb on
+                    gpio_write(GPIO_PIN(PORT_B,5),1);
+                }
+                
+                dht_temp_read();
 
-Now, create a tap interface:
+                sprintf(msg,"T:%.1f C H:%.1f%%",th[0]/10.0f,th[1]/10.0f);
+              
+                lcd_write(msg);
+                
+                mutex_unlock(&mutex);
+                //critical section end
+                break;
+            }
+            
+```
+When the movement is no longer detected the bulb is turned off(if not controlled by web interface)
+```c
+            case PIR_STATUS_INACTIVE:{
+                puts("[PIR]: Movement has ceased.");
+                  
+                //critical section start
+                mutex_lock(&mutex);
+               /* if bulb was not turned on from mqtt turn it off now */
+                if(auto_mode){
+                     /// bulb off
+                    gpio_write(GPIO_PIN(PORT_B,5),0);
+                }
+                mutex_unlock(&mutex);
+                //critical section end
+                break;
+            }
+            default:
+                puts("stray message.");
+                break;
+        }
+    }
+    puts("PIR handler: this should not have happened!");
 
-    sudo ip tuntap add tap0 mode tap user ${USER}
-    sudo ip link set tap0 up
+    return NULL;
+}
+```
+## Dht Module
+Simple function used to poll the sensor and update global variable th (for temperature and humidity):
+```c
+void dht_temp_read(void) {
+    
+    int16_t temp,hum;
+    dht_read(&dht_dev,&temp,&hum);
+    
+    th[0] = temp;
+    th[1] = hum;
+    
+    return;
+}
+```
+## LCD Module
+Simple function used to write a string on display:
+```c
+int lcd_write(char msg[]){
+    
+    // clear screen, reset cursor 
+   
+    hd44780_clear(&display_dev);
+    hd44780_home(&display_dev);
+    // write first line 
+    hd44780_print(&display_dev,msg);
+    
+    //set cursor to second line and write 
+    hd44780_set_cursor(&display_dev, 0, 1);
+    // greetings :)
+    hd44780_print(&display_dev,"Welcome!");
 
-Now you can start the `gnrc_networking` example by invoking `make term`.
-This should automatically connect to the `tap0` interface. If this
-doesn't work for any reason, run make term with the tap0 interface as
-the PORT environment variable:
-
-    PORT=tap0 make term
-
-To verify that there is connectivity between RIOT and Linux, go to the
-RIOT console and run `ifconfig`:
-
-    > ifconfig
-    Iface  7   HWaddr: ce:f5:e1:c5:f7:5a
-               inet6 addr: ff02::1/128  scope: local [multicast]
-               inet6 addr: fe80::ccf5:e1ff:fec5:f75a/64  scope: local
-               inet6 addr: ff02::1:ffc5:f75a/128  scope: local [multicast]
-
-Copy the link-local address of the RIOT node (prefixed with `fe80`) and
-try to ping it **from the Linux node**:
-
-    ping6 fe80::ccf5:e1ff:fec5:f75a%tap0
-
-Note that the interface on which to send the ping needs to be appended
-to the IPv6 address, `%tap0` in the above example. When talking to the
-RIOT node, you always want to send to/receive from the `tap0` interface.
-
-If the pings succeed you can go on to send UDP packets. To do that,
-first start a UDP server on the RIOT node:
-
-    > udp server start 8808
-    Success: started UDP server on port 8808
-
-Now, on the Linux host, you can run netcat to connect with RIOT's UDP
-server:
-
-    nc -6uv fe80::ccf5:e1ff:fec5:f75a%tap0 8808
-
-The `-6` option is necessary to tell netcat to use IPv6 only, the `-u`
-option tells it to use UDP only, and the `-v` option makes it give more
-verbose output (this one is optional).
-
-You should now see that UDP messages are received on the RIOT side.
-Opening a UDP server on the Linux side is also possible. To do that,
-write down the IP address of the host (run on Linux):
-
-    ifconfig tap0
-    tap0     Link encap:Ethernet  HWaddr ce:f5:e1:c5:f7:59
-            inet6 addr: fe80::4049:5fff:fe17:b3ae/64 Scope:Link
-            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-            RX packets:6 errors:0 dropped:0 overruns:0 frame:0
-            TX packets:36 errors:0 dropped:0 overruns:0 carrier:0
-            collisions:0 txqueuelen:0
-            RX bytes:488 (488.0 B)  TX bytes:3517 (3.5 KB)
-
-Then open a UDP server on Linux (the `-l` option makes netcat listen for
-incoming connections):
-
-    nc -6ul 8808
-
-Now, on the RIOT side, send a UDP packet using:
-
-    udp send fe80::4049:5fff:fe17:b3ae 8808 testmessage
-
-You should see `testmessage` appear in netcat. Instead of using netcat,
-you can of course write your own software, but you may have to bind the
-socket to a specific interface (tap0 in this case). To do so, have a
-look at [setting the `SO_BINDTODEVICE` option using `setsocketopt()`][sso].
-
-## Connecting two RIOT instances
-
-When using native (i.e. when you're trying this on your Linux machine),
-you first need to set up two tap devices and a bridge that connects
-them. This constitutes a virtual network that the RIOT instances can
-use to communicate.
-
-    sudo ./../../dist/tools/tapsetup/tapsetup --create 2
-
-Then, make sure you've compiled the application by calling `make` and
-start the first RIOT instance by invoking `make term`. In the RIOT
-shell, get to know the IP address of this node:
-
-    > ifconfig
-    Iface  7   HWaddr: ce:f5:e1:c5:f7:5a
-               inet6 addr: ff02::1/128  scope: local [multicast]
-               inet6 addr: fe80::ccf5:e1ff:fec5:f75a/64  scope: local
-               inet6 addr: ff02::1:ffc5:f75a/128  scope: local [multicast]
-
-and start a UDP server.
-
-    > udp server start 8808
-
-This node is now ready to receive data on port `8808`.
-
-In a second terminal, start a second RIOT instance, this time listening
-on `tap1`:
-
-    PORT=tap1 make term
-
-In the RIOT shell, you can now send a message to the first RIOT
-instance:
-
-    > udp send fe80::ccf5:e1ff:fec5:f75a 8808 testmessage
-
-*(Make sure to copy the actual
-[link-local address](https://en.wikipedia.org/wiki/Link-local_address)
-of your first RIOT instance into the above command)*
-
-In your first terminal, you should now see output that looks like this.
-
-    > PKTDUMP: data received:
-    ~~ SNIP  0 - size:  11 byte, type: NETTYPE_UNDEF (0)
-    000000 74 65 73 74 6d 65 73 73 61 67 65
-    ~~ SNIP  1 - size:   8 byte, type: NETTYPE_UDP (3)
-       src-port:  8808  dst-port:  8808
-       length: 19  cksum: 0x4d95f
-    ~~ SNIP  2 - size:  40 byte, type: NETTYPE_IPV6 (1)
-    traffic class: 0x00 (ECN: 0x0, DSCP: 0x00)
-    flow label: 0x00000
-    length: 19  next header: 17  hop limit: 64
-    source address: fe80::a08a:84ff:fe68:544f
-    destination address: fe80::60fc:3cff:fe5e:40df
-    ~~ SNIP  3 - size:  20 byte, type: NETTYPE_NETIF (-1)
-    if_pid: 6  rssi: 0  lqi: 0
-    src_l2addr: a2:8a:84:68:54:4f
-    dst_l2addr: 62:fc:3c:5e:40:df
-    ~~ PKT    -  4 snips, total size:  79 byte
-
-[sso]: https://stackoverflow.com/questions/14478167/bind-socket-to-network-interface#14478657
+    return 0;
+}
+```
+## Mqtt Module
+This is the code for the main advertiser loop: every 30s are sent via mqtt_sn data read from sensors:
+```c
+ while(1){
+        //critical section start
+        mutex_lock(&mutex);
+                    
+        dht_temp_read();
+        
+        printf("Advertising...\n");
+        
+        sprintf(json,"{\n \"temperature\":%.1f,\n \"humidity\":%.1f,\n \"last_awake\":%.1f\n}",
+        th[0]/10.0f,th[1]/10.0f,pir_last_awake_s == 0 ? 0.0f : (xtimer_now_usec() - pir_last_awake_s)/1000000 );
+        
+        mqtt_pub(MQTT_TOPIC_TO_AWS,json);
+        
+        mutex_unlock(&mutex);
+        //critical section end
+        
+        xtimer_sleep(30);
+    }
+```
