@@ -129,5 +129,9 @@ Infact we can see from ping statistics that the average delay with 802.15.4 mesh
 
 # Devie Scheme
 
-Finally here is the updated device scheme used for this second assignment. The Aws remains unchanged, despite the dashboard support for three devices at the time.
-<img src="../imgs/scheme_2.png" width="800" height="370">
+
+<p>
+   <img src="../imgs/scheme_2.png" width="800" height="370">
+ </p><p>
+    <em>Finally here is the updated device scheme used for this second assignment. The Aws remains unchanged, despite the dashboard support for three devices at the time.</em>
+</p>
