@@ -100,5 +100,10 @@ The power cosumption on the router m3 node is slightly higher: the radio module 
 On the A8 devices power consuption is generally higher than m3 due to different architecture. We can also many spikes due to MQTT SN broker and MQTT SN-MQTT Mosquitto bridge: 
 <img src="../imgs/power_a8.png" width="400" height="350">
 
+# Devie Scheme
+Finally here is the updated device scheme used for this second assignment. The Aws remains unchanged, despite the dashboard support for three devices at the time.
+<img src="../imgs/scheme_2.png" width="800" height="370">
+
+
 
 
