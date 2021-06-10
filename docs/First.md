@@ -86,11 +86,11 @@ The data coming from sensors are aggregated via RIOT OS: when PIR sensor detects
 Use the STM32 Nucleo F401RE board with RIOT OS. MQTT advertisng on "/iot/1/data" every 30 seconds with sensors data.
 
 #### MQTT-SN RSMB broker
-Config file on [this path](./config/rsmb_local.conf). It forwards from/to the transparent bridge "/iot/+/data" (from the board, and where the '+' is a wildcard for device id) and "both_direction" (from the board to AWS and to the board from AWS) topics.
+Config file on [this path](../config/rsmb_local.conf). It forwards from/to the transparent bridge "/iot/+/data" (from the board, and where the '+' is a wildcard for device id) and "both_direction" (from the board to AWS and to the board from AWS) topics.
 
 ### Bridge
 #### MQTT-SN/MQTT Mosquitto transparent bridge
-Config file on [this path](./config/m_bridge.conf). It forwards from/to IoT Core MQTT "/iot/+/data" and "both_direction" topics.
+Config file on [this path](../config/mosquitto_bridge_local.conf). It forwards from/to IoT Core MQTT "/iot/+/data" and "both_direction" topics.
 
 ### Cloud Level
 
