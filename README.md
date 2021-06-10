@@ -2,4 +2,4 @@
 
 - **[Assignment One](docs/First.md)**
 - **[Assignment Two](docs/Second.md)**
-- **[Assignment Three](docs/Three.md)**
+- **[Assignment Three](docs/Third.md)**
