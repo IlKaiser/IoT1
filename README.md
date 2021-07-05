@@ -1,5 +1,5 @@
 # Internet of Things 20/21 
 
-- **[Assignment One](docs/First.md)**
-- **[Assignment Two](docs/Second.md)**
-- **[Assignment Three](docs/Third.md)**
+- **[Assignment One](first_delivery/docs/First.md)**
+- **[Assignment Two](second_delivery/docs/Second.md)**
+- **[Assignment Three](third_delivery/docs/Third.md)**

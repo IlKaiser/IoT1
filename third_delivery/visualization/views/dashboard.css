@@ -1,0 +1,15 @@
+h1{
+    color:rgb(255, 102, 102);
+} 
+
+#mesurements_analysis{
+    font-weight: bold;
+}
+
+#lmc{
+    font-weight: bold;
+}
+#title{
+    font-weight: bold;
+    font-size: 4rem;
+}
