@@ -7,13 +7,12 @@
  */
 
 /**
- * @ingroup     examples
  * @{
  *
  * @file
- * @brief       Example application for demonstrating the RIOT network stack
+ * @brief     IoT-lab-m3 code
  *
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
+ * @author      Marco Calamo 1808240
  *
  * @}
  */
