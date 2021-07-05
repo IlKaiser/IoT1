@@ -103,7 +103,7 @@ Infact we can see from ping statistics that the average delay with 802.15.4 mesh
 <p>
    <img src="../imgs/power_dev.png" width="300" height="250">
  </p><p>
-    <em>This is the energy consuption on the node where my program was running: there is a clear first spike when the code is flashed on the device, and many smaller spikes on mqtt advertising.</em>
+    <em>This is the energy consuption on the node where my program was running: there is a clear first spike when the code is flashed on the device, and many smaller spikes on mqtt advertising (every 30s).</em>
 </p>
 
 <p>
