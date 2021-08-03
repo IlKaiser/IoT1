@@ -13,7 +13,7 @@ The actuator i chose are a **Relay** in combination with a **lightbulb** in orde
 The DHT11 sensor polling will be event driven: when the PIR sensor detects a movement the aforementioned routine starts. DHT11 is also polled on MQTT publish every 30s. The PIR sensor is in continuous polling.
 
 ## Circuit Setup
-![Png](../source/nucleo-f401re/circuit_setup/circuit.png)
+![Png](../imgs/circuit_setup/circuit.png)
 
 ### DHT11 temperature & humidity Sensor
 <img src="../imgs/DHT11-Sensor.jpg" width="100" height="100">
