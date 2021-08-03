@@ -13,7 +13,6 @@
  * @file
  * @brief       Example application for demonstrating the RIOT network stack
  *
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
  *
  * @}
  */
@@ -180,6 +179,7 @@ int init_mqtt(char* _SERVER_ADDR_){
 
 /* mqtt new routine */
 int mqtt_cmd(int argc, char **argv){
+    
     if(argc < 3){
         printf("Usage mqtt [addr] [id]\n");
         return -1;

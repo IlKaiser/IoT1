@@ -1,6 +1,6 @@
 # Internet of Things 20/21 assignment two
 
-Most of the code and the setup is the same form assignment one. If some passage is not clear (e.g. AWS or web interface setup) see [assignment one summary](./First.md) for reference.
+Most of the code and the setup is the same form assignment one. If some passage is not clear (e.g. AWS or web interface setup) see [assignment one summary](../first_delivery/docs/First.md) for reference.
 # Start experiment
 To Start the experiments first setup an experiment on iot lab like this:
 <img src="../imgs/experiment.png" width="800" height="370">
@@ -97,6 +97,7 @@ for more info of what does the code see [here](../source/iotlab-m3/README.md)
 
 Infact we can see from ping statistics that the average delay with 802.15.4 mesh networking is always about 60ms, independetly from how many devices are connected to the network (up to 4 tested).
 <img src="../imgs/network.png" width="800" height="370">
+
 # Energy Consumption
 ## Main Device(s)
 

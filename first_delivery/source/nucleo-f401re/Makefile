@@ -1,8 +1,8 @@
 APPLICATION = smart_home
 
-BOARD ?= native
+BOARD ?= nucleo-f401re
 
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 DEVELHELP ?= 1
 

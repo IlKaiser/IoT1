@@ -100,6 +100,7 @@ int lcd_write(char msg[]){
     hd44780_clear(&display_dev);
     hd44780_home(&display_dev);
     // write first line 
+    
     hd44780_print(&display_dev,msg);
     
     //set cursor to second line and write 
@@ -320,6 +321,7 @@ void* pir_handler(void *arg){
                 dht_temp_read();
 
                 sprintf(msg,"T:%.1f C H:%.1f%%",th[0]/10.0f,th[1]/10.0f);
+                printf("msg %s\n",msg);
               
                 lcd_write(msg);
                 

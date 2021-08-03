@@ -6,7 +6,7 @@ BOARD ?= iotlab-m3
 DEFAULT_CHANNEL ?= 22
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
@@ -35,6 +35,7 @@ USEMODULE += netstats_rpl
 USEMODULE += gnrc_sock_check_reuse
 USEMODULE += gnrc_sock_udp
 USEMODULE += gnrc_ipv6
+
 
 # Print effin floats
 USEMODULE += printf_float
