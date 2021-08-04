@@ -89,12 +89,12 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len){
            topic->name, (int)topic->id);
     
     if(in[0]=='o' && in[1]=='n' && (in[2]-'0') == device_id){
-        printf("Light it up");
+        printf("Light it up\n");
                 
     }else if(in[0]=='o' && in[1]=='f'&& in[2]=='f'
-        && (in[2]-'0') == device_id
+        && (in[3]-'0') == device_id
     ){
-         printf("Turn it off");
+         printf("Turn it off\n");
         
     }else{
         printf("Command not recognized\n");

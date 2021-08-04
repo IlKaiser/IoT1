@@ -27,3 +27,9 @@ With the **TTN** platform is possible to have direct integration with AWS :
 
 # Test Results
 Due to the impossibility to proceed with full tests, no datas are available.
+
+# Code
+More info about the code [here](../source/b-l072z-lrwan1/README.md)
+
+# Dashboard
+More info about the dashboard [here](../visualization/README.md)
