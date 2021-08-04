@@ -10,5 +10,5 @@ and humidity.
 - **[Assignment Three](third_delivery/docs/Third.md)**
 
 ## Related resources
-- **[Blog Post](https://medium.com/@calamo.1808240/smart-home-an-iot-project-7dde40f2d0e5)**
+- **[Blog Post](https://medium.com/@calamo.marco/smart-home-an-iot-project-7dde40f2d0e5)**
 - **[Video Demo]()**
