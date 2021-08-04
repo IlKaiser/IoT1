@@ -6,4 +6,4 @@ URL=http://localhost:8001
 path=$(which xdg-open || which gnome-open) && exec "$path" "$URL" &
  
 # launch backend
-node visualization/app.js 
+node ../visualization/app.js 
