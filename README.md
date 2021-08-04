@@ -11,4 +11,4 @@ and humidity.
 
 ## Related resources
 - **[Blog Post](https://medium.com/@calamo.marco/smart-home-an-iot-project-7dde40f2d0e5)**
-- **[Video Demo]()**
+- **[Video Demo](https://youtu.be/QzcY-DJ_IPM)**
