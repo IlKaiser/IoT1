@@ -40,7 +40,7 @@ use the `set`/`get` commands in test application shell.
 
 ## Joining with Over The Air Activation
 
-In order to correct setup LoraWAN with TNN it is necessry to edit the [main.c](.main.c) and to add your datas found on your TTN dashboard:
+In order to correct setup LoraWAN with TNN it is necessry to edit the [main.c](main.c) and to add your datas found on your TTN dashboard:
 ```c
 /*
  * 
