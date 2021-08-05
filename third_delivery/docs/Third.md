@@ -1,6 +1,6 @@
 # Internet of Things 20/21 assignment three
 
-Most of the code and the setup is the same form assignment one and two. If some passage is not clear (e.g. AWS or web interface setup or uploading firmware on IoT-LAB board) see [assignment one summary](../first_delivery/docs/First.md) and [assignment two summary](../second_delivery/docs/Second.md) for reference.
+Most of the code and the setup is the same form assignment one and two. If some passage is not clear (e.g. AWS or web interface setup or uploading firmware on IoT-LAB board) see [assignment one summary](../../first_delivery/docs/First.md) and [assignment two summary](../../second_delivery/docs/Second.md) for reference.
 
 # Setup 
 
