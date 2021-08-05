@@ -83,8 +83,11 @@ for more info of what does the code see [here](../source/iotlab-m3/README.md)
 # New dashboard
 <img src="../imgs/new_dashboard1.png" width="800" height="370">
 <img src="../imgs/new_dashboard2.png" width="800" height="370">
-<br/><br/>
+
+
 for more info on the dashboard see [here](../visualization/README.md)
+
+
 # Network Performances
 
 
