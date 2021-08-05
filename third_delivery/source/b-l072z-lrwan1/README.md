@@ -55,8 +55,8 @@ const unsigned char* appkey = (const unsigned char*) "";
 ```
 ## Application Structure:
 The code is divided in two main logical blocks:
-- [Receive Module](###receive-module)
-- [Send Module](###send-module)
+- [Receive Module](#receive-module)
+- [Send Module](#send-module)
 
 When the code is run it automatically register the board on the LoRa network, wiht lora_init function:
 ```c
