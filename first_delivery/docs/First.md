@@ -137,13 +137,13 @@ Npm packages used are:
 ### Warnings
 - **Make sure to have AWS valid credentials saved on ~/.aws/credentials before trying to run anything.**
 
-- **I created a /secret folder in [visualization](./visualization) folder with all credentials, for safety reasons not published on git**
+- **I created a /secret folder in [visualization](../visualization) folder with all credentials, for safety reasons not published on git**
 
 - **[RIOT OS](https://github.com/RIOT-OS/RIOT) needs to be already set up**
 
 - **[NodeJS and nmp](https://linuxize.com/post/how-to-install-node-js-on-ubuntu-20-04/) need to be already installed**
 
-- **AWS needs to be already setup with DynamoDB table, IoT Core MQTT object and IoT Core rule for data forward from MQTT to DB ([tutorial](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ddb-rule.html) i followed; final result of rule is [here](./imgs/rule.png))**
+- **AWS needs to be already setup with DynamoDB table, IoT Core MQTT object and IoT Core rule for data forward from MQTT to DB ([tutorial](https://docs.aws.amazon.com/iot/latest/developerguide/iot-ddb-rule.html) i followed; final result of rule is [here](../imgs/rule.png))**
 
 - **[RSMB](https://github.com/eclipse/mosquitto.rsmb) broker must be on $PATH since it is started in "./start_board.sh" script, otherwise a manual start is required**.
 
